@@ -250,6 +250,37 @@ h2 { font-size: clamp(1.75rem, 3.1vw, 2.6rem) !important; }
 .phone-video video { width: 100%; aspect-ratio: 432 / 768; object-fit: cover; border-radius: 34px; border: 10px solid #141615; background: #000; box-shadow: 0 0 0 2px #c9952e, 0 0 0 7px rgba(242, 207, 107, 0.18), 0 40px 80px rgba(80, 60, 20, 0.45), 0 0 60px rgba(242, 207, 107, 0.35); }
 .phone-video figcaption { margin-top: 14px; text-align: center; font-size: 0.92rem; color: var(--paper-dim); }
 @media (max-width: 900px) { .easy-grid { grid-template-columns: 1fr; } }
+/* ===== 크기 조화: 그림·영상·모형을 한 단계 작게 ===== */
+.top .mark { height: 40px !important; }
+.brand-t { font-size: 1.25rem; }
+@media (min-width: 901px) { .sim-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.model { max-width: 500px; justify-self: center; }
+.ctrl { flex-wrap: wrap; } .ctrl button { white-space: nowrap; }
+.meter .unit { white-space: nowrap; }
+.boards { gap: 18px; }
+.board { padding: 20px 20px 20px; }
+.board .bcv { aspect-ratio: 16 / 10; max-width: 280px; margin: -4px auto 8px; }
+.board h3 { font-size: 1.7rem; }
+.phone-video { width: min(250px, 62vw); }
+.phone-video video { border-radius: 28px; border-width: 8px; }
+.strip { gap: 16px; }
+.strip figure { width: min(180px, 46vw); }
+.strip img { border-radius: 22px; border-width: 6px; }
+.strip figcaption { font-size: 0.86rem; }
+@media (min-width: 901px) { .daily .wrap { grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr); } }
+.daily figure { max-width: 480px; justify-self: center; }
+@media (max-width: 900px) {
+  .boards { max-width: 400px; margin-inline: auto; }
+  .board .bcv { max-width: 240px; }
+  .model { max-width: 380px; }
+  .daily figure { max-width: 400px; }
+}
+@media (max-width: 480px) {
+  .board .bcv { max-width: 220px; }
+  .phone-video { width: min(220px, 60vw); }
+  .model { max-width: 330px; }
+}
+
 
 </style>
 </head>
@@ -513,8 +544,8 @@ var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)")
   [].slice.call(document.querySelectorAll(".bcv")).forEach(function (cv, ci) {
     var N = +cv.dataset.n, L = +cv.dataset.l, col = cv.dataset.c, ctx = cv.getContext("2d"), D = Math.min(devicePixelRatio || 1, 2), W = 0, H = 0, on = false;
     var gap = L === 2 ? 2.2 : (N === 3 ? 1.15 : 1.5), half = (N - 1) / 2, R = Math.max(half * 1.42, (L - 1) / 2 * gap) + 0.7;
-    function size() { W = cv.clientWidth; H = cv.clientHeight; cv.width = W * D; cv.height = H * D; ctx.setTransform(D, 0, 0, D, 0, 0); }
-    size(); addEventListener("resize", size);
+    /* 크기는 그릴 때마다 확인 (휴대폰에서 처음에 폭이 0으로 잡히면 그림이 안 나오던 문제) */
+    function size() { var w = cv.clientWidth || cv.parentNode.clientWidth, h = cv.clientHeight || Math.round(w * 0.62); if (w === W && h === H) return; W = w; H = h; cv.width = Math.max(1, W * D); cv.height = Math.max(1, H * D); ctx.setTransform(D, 0, 0, D, 0, 0); }
     var yaw = -0.6 + ci * 0.4, pitch = 0.5, seed = 7 + ci * 31, cells = [], placed = [], t0 = 0, fadeAt = 0;
     function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
     function reset(now) {
@@ -538,8 +569,9 @@ var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)")
       var h = ctx.createRadialGradient(x - r * 0.38, y - r * 0.45, 0, x - r * 0.38, y - r * 0.45, r * 0.45); h.addColorStop(0, c ? "rgba(255,255,255,.5)" : "rgba(255,255,255,.95)"); h.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = h; ctx.beginPath(); ctx.arc(x - r * 0.38, y - r * 0.45, r * 0.45, 0, 6.283); ctx.fill(); ctx.globalAlpha = 1;
     }
-    function frame(now) {
-      if (!on) return;
+    function frame(now, once) {
+      if (!on && !once) return;
+      size(); if (!W || !H) { if (!once) requestAnimationFrame(frame); return; }
       if (!t0) reset(now);
       if (!REDUCE) yaw += 0.0035;
       var el = now - t0, want = Math.min(Math.floor(el / 420), Math.floor(cells.length * 0.42));
@@ -558,10 +590,16 @@ var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)")
       var list = placed.map(function (o) { var d = Math.min(1, (now - o.born) / 400); return { q: P(o.p[0], o.p[1] + Math.pow(1 - d, 3) * 1.2, o.p[2]), c: o.c, a: Math.min(1, d * 1.5) * fade }; });
       list.sort(function (m, n) { return n.q.z - m.q.z; });
       list.forEach(function (o) { ball(o.q.x, o.q.y, o.q.s * 0.36 * o.q.k, o.c, o.a); });
-      requestAnimationFrame(frame);
+      if (!once) requestAnimationFrame(frame);
     }
-    if (REDUCE) { on = true; reset(0); var t = performance.now(); placed = cells.slice(0, Math.floor(cells.length * 0.35)).map(function (p, i) { return { p: p, c: i % 2 === 0, born: -1e9 }; }); t0 = -1e12; frame(t); on = false; return; }
-    new IntersectionObserver(function (e) { var was = on; on = e[0].isIntersecting; if (on && !was) requestAnimationFrame(frame); }).observe(cv);
+    if (REDUCE) {   /* 움직임 줄이기 설정: 돌이 놓인 한 장면을 그려 두고, 크기가 바뀌면 다시 그림 */
+      var still = function () { reset(0); placed = cells.slice(0, Math.floor(cells.length * 0.35)).map(function (p, i) { return { p: p, c: i % 2 === 0, born: -1e9 }; }); t0 = -1e12; frame(performance.now(), true); };
+      still(); addEventListener("resize", still); addEventListener("load", still);
+      if (window.ResizeObserver) new ResizeObserver(still).observe(cv);
+      return;
+    }
+    if (window.IntersectionObserver) new IntersectionObserver(function (e) { var was = on; on = e[0].isIntersecting; if (on && !was) requestAnimationFrame(frame); }, { rootMargin: "100px" }).observe(cv);
+    else { on = true; requestAnimationFrame(frame); }
   });
 })();
 /* ---------- 플레이 영상: 보일 때만 재생 ---------- */
@@ -577,7 +615,7 @@ var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)")
   var elH = document.getElementById("sim-h"), elT = document.getElementById("sim-t"), elN = document.getElementById("sim-n"), elU = document.getElementById("sim-u");
   var bPlay = document.getElementById("sim-play"), tabs = [].slice.call(document.querySelectorAll(".tab"));
   var D = Math.min(devicePixelRatio || 1, 2), W = 0, H = 0;
-  function size() { var r = box.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * D; cv.height = H * D; ctx.setTransform(D, 0, 0, D, 0, 0); }
+  function size() { var r = box.getBoundingClientRect(), w = Math.round(r.width), h = Math.round(r.height) || w; if (w === W && h === H) return; W = w; H = h; cv.width = Math.max(1, W * D); cv.height = Math.max(1, H * D); ctx.setTransform(D, 0, 0, D, 0, 0); }
   size(); addEventListener("resize", size);
   var yaw = -0.7, pitch = 0.52, drag = null, auto = !REDUCE, visible = true;
   box.addEventListener("pointerdown", function (e) { drag = { x: e.clientX, y: e.clientY, yaw: yaw, pitch: pitch }; box.setPointerCapture(e.pointerId); });
@@ -660,6 +698,7 @@ var REDUCE = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)")
   var LAY = ["rgba(176,122,60,", "rgba(242,207,107,", "rgba(95,209,165,"];
   function draw(tnow) {
     if (!visible) return;
+    size(); if (!W) { requestAnimationFrame(draw); return; }
     now = tnow; var el = (now - t0) / 1000, S = SC[cur];
     while (ev < S.ev.length && el >= S.ev[ev][0]) { S.ev[ev][1](); ev++; }
     if (auto && el > S.dur) start(cur + 1);
