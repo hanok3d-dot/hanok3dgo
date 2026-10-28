@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>공간바둑 空棋 · HANOK3D GO</title>
+<meta name="description" content="가로·세로·높이, 여섯 방향으로 이어지는 바둑. 주소만 열면 휴대폰과 컴퓨터에서 바로 둘 수 있습니다.">
+<meta property="og:title" content="공간바둑 空棋 · HANOK3D GO">
+<meta property="og:description" content="가로·세로·높이, 여섯 방향으로 이어지는 바둑. 링크를 열면 바로 한 판.">
+<meta name="theme-color" content="#0f1416">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2232%22 cy=%2232%22 r=%2226%22 fill=%22%23111%22/%3E%3Ccircle cx=%2224%22 cy=%2224%22 r=%227%22 fill=%22%23ffffff33%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #e7d9bd;            /* 한지·나무판 */
+  --surface: #f2e8d3;
+  --ink: #1b1712;           /* 먹 */
+  --muted: #5b5041;
+  --line: rgba(27, 23, 18, 0.16);
+  --accent: #1d5c48;        /* 단청 녹색 */
+  --accent-ink: #f4ecdb;
+  --gold: #9a6d12;
+  --stone-b: #15130f;
+  --stone-w: #f4efe3;
+  --cube: rgba(60, 44, 20, 0.42);
+  --cube-mid: #2f7a55;
+  --serif: "Nanum Myeongjo", "AppleMyungjo", "Batang", serif;
+  --sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0f1416;          /* 밤의 먹빛 */
+    --surface: #172125;
+    --ink: #efe6d2;
+    --muted: #b2a68e;
+    --line: rgba(239, 230, 210, 0.14);
+    --accent: #e2b552;      /* 금박 */
+    --accent-ink: #1b1508;
+    --gold: #e2b552;
+    --stone-b: #070808;
+    --stone-w: #efe8d8;
+    --cube: rgba(226, 181, 82, 0.34);
+    --cube-mid: #6fbf9d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1416; --surface: #172125; --ink: #efe6d2; --muted: #b2a68e; --line: rgba(239, 230, 210, 0.14);
+  --accent: #e2b552; --accent-ink: #1b1508; --gold: #e2b552; --stone-b: #070808; --stone-w: #efe8d8;
+  --cube: rgba(226, 181, 82, 0.34); --cube-mid: #6fbf9d;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 1.0625rem; line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+img, svg, canvas { max-width: 100%; }
+a { color: inherit; }
+.wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
+
+/* ---------- 머리 ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+.mark { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; letter-spacing: 0.02em; }
+.mark svg { width: 28px; height: 28px; }
+.top nav { display: flex; gap: 22px; font-size: 0.95rem; }
+.top nav a { text-decoration: none; color: var(--muted); }
+.top nav a:hover { color: var(--ink); }
+@media (max-width: 640px) { .top nav { display: none; } }
+
+/* ---------- 첫 화면 ---------- */
+.hero { display: grid; grid-template-columns: 1.05fr 1fr; align-items: center; gap: 24px; padding: 28px 0 56px; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-top: 8px; } }
+.hero h1 {
+  font-family: var(--serif); font-weight: 800; margin: 0;
+  font-size: clamp(3.4rem, 11vw, 6.6rem); line-height: 1.02; letter-spacing: -0.02em;
+}
+.hero h1 .han { display: block; font-size: 0.46em; letter-spacing: 0.32em; color: var(--gold); margin-top: 0.35em; }
+.lede { font-size: clamp(1.1rem, 2.4vw, 1.3rem); color: var(--muted); max-width: 30em; margin: 22px 0 30px; }
+.lede b { color: var(--ink); font-weight: 700; }
+.acts { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 52px; padding: 0 26px; border-radius: 999px; border: 1.5px solid var(--ink);
+  font: 700 1.02rem/1 var(--sans); text-decoration: none; cursor: pointer;
+  background: transparent; color: var(--ink);
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.cube-stage { position: relative; aspect-ratio: 1 / 1; width: 100%; max-width: 520px; justify-self: center; }
+.cube-stage canvas { width: 100%; height: 100%; display: block; touch-action: pan-y; cursor: grab; }
+.cube-stage figcaption { position: absolute; left: 0; right: 0; bottom: -4px; text-align: center; font-size: 0.85rem; color: var(--muted); }
+
+/* ---------- 구역 ---------- */
+section { padding: 64px 0; border-top: 1px solid var(--line); }
+h2 { font-family: var(--serif); font-weight: 800; font-size: clamp(1.9rem, 4.6vw, 2.7rem); line-height: 1.2; margin: 0 0 14px; letter-spacing: -0.01em; }
+.sub { color: var(--muted); max-width: 40em; margin: 0 0 36px; }
+
+/* 판 세 가지: 크기가 다르니 모양도 다르게 */
+.boards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px; }
+@media (max-width: 860px) { .boards { grid-template-columns: 1fr; gap: 40px; } }
+.board h3 { font-family: var(--serif); font-size: 2.1rem; margin: 10px 0 2px; letter-spacing: 0.01em; }
+.board .ver { font-family: var(--serif); color: var(--gold); font-weight: 700; margin-left: 8px; font-size: 1.05rem; }
+.board p { margin: 8px 0 0; color: var(--muted); }
+.board dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; margin: 14px 0 0; font-size: 0.95rem; }
+.board dt { color: var(--muted); }
+.board dd { margin: 0; font-weight: 700; }
+.board svg.mini { width: 132px; height: 112px; display: block; }
+
+/* 규칙 */
+.rules { display: grid; grid-template-columns: repeat(2, 1fr); gap: 28px 48px; max-width: 980px; }
+@media (max-width: 760px) { .rules { grid-template-columns: 1fr; } }
+.rule h3 { font-size: 1.12rem; margin: 0 0 6px; }
+.rule p { margin: 0; color: var(--muted); }
+
+/* 함께 두는 법 */
+.ways { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1.5px solid var(--ink); border-radius: 18px; overflow: hidden; }
+@media (max-width: 860px) { .ways { grid-template-columns: 1fr; } }
+.way { padding: 26px 26px 28px; background: var(--surface); }
+.way + .way { border-left: 1.5px solid var(--ink); }
+@media (max-width: 860px) { .way + .way { border-left: 0; border-top: 1.5px solid var(--ink); } }
+.way h3 { font-family: var(--serif); font-size: 1.45rem; margin: 0 0 8px; }
+.way p { margin: 0; color: var(--muted); }
+
+/* 주소 보내기 */
+.send { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+@media (max-width: 860px) { .send { grid-template-columns: 1fr; } }
+.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+.steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 14px; padding: 12px 0; }
+.steps li::before {
+  content: counter(s); width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; font: 800 1.05rem/1 var(--serif);
+  background: var(--stone-b); color: var(--stone-w);
+}
+.steps li:nth-child(even)::before { background: var(--stone-w); color: var(--stone-b); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.steps b { display: block; }
+.steps span { color: var(--muted); }
+.share-box { background: var(--surface); border: 1.5px solid var(--ink); border-radius: 18px; padding: 24px; }
+.share-box label { display: block; font-weight: 700; margin-bottom: 8px; }
+.url-row { display: flex; gap: 8px; }
+.url-row input {
+  flex: 1; min-width: 0; height: 48px; padding: 0 14px; border-radius: 12px;
+  border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font: 500 0.95rem var(--sans);
+}
+.url-row .btn { min-height: 48px; padding: 0 18px; }
+.note { font-size: 0.9rem; color: var(--muted); margin: 12px 0 0; }
+.note.warn { color: var(--ink); }
+.toast {
+  position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 999px; font-weight: 700; font-size: 0.95rem;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+footer { padding: 36px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="#">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="var(--stone-b)"/><circle cx="12" cy="12" r="3.4" fill="#ffffff2a"/></svg>
+      HANOK3D GO
+    </a>
+    <nav aria-label="바로가기">
+      <a href="#boards">판 고르기</a>
+      <a href="#rules">규칙</a>
+      <a href="#together">함께 두기</a>
+      <a href="#send">주소 보내기</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>공간바둑<span class="han">空棋</span></h1>
+        <p class="lede">바둑판을 층층이 쌓았습니다. 돌은 <b>가로·세로뿐 아니라 위·아래로도</b> 이어지고, 여섯 방향을 모두 막아야 잡힙니다. 설치 없이 이 주소에서 바로 둘 수 있어요.</p>
+        <div class="acts">
+          <a class="btn primary" href="game.html">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>
+            지금 한 판 두기
+          </a>
+          <button class="btn" type="button" data-share>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg>
+            친구에게 주소 보내기
+          </button>
+        </div>
+      </div>
+      <figure class="cube-stage" style="margin:0">
+        <canvas id="cube" width="640" height="640" aria-label="세 층으로 쌓인 3×3×3 공간바둑 판이 천천히 돌아가는 그림" role="img"></canvas>
+        <figcaption>3×3×3 · 끌어서 돌려 보세요</figcaption>
+      </figure>
+    </div>
+
+    <section id="boards" aria-labelledby="h-boards">
+      <h2 id="h-boards">판은 세 가지</h2>
+      <p class="sub">판 이름은 ‘층 수 × 가로 × 세로’입니다. 처음이라면 3×3×3에서 시작해 게임 안의 튜토리얼을 따라가 보세요.</p>
+      <div class="boards">
+        <article class="board">
+          <svg class="mini" viewBox="0 0 132 112" aria-hidden="true" data-mini="3,3"></svg>
+          <h3>3×3×3<span class="ver">v3.3</span></h3>
+          <p>27점짜리 작은 정육면체. 몇 수 만에 승부가 나서 규칙을 익히기 좋습니다.</p>
+          <dl><dt>층</dt><dd>3층</dd><dt>교차점</dt><dd>27</dd><dt>덤</dt><dd>0.5</dd><dt>AI 등급</dt><dd>10급 → 1급</dd></dl>
+        </article>
+        <article class="board">
+          <svg class="mini" viewBox="0 0 132 112" aria-hidden="true" data-mini="3,5"></svg>
+          <h3>3×5×5<span class="ver">v5.3</span></h3>
+          <p>5×5 판 세 층. 가운데 층을 두고 위·아래에서 동시에 집을 짓는 싸움이 벌어집니다.</p>
+          <dl><dt>층</dt><dd>3층</dd><dt>교차점</dt><dd>75</dd><dt>덤</dt><dd>3.5</dd><dt>AI 등급</dt><dd>10부 → 1부</dd></dl>
+        </article>
+        <article class="board">
+          <svg class="mini" viewBox="0 0 132 112" aria-hidden="true" data-mini="2,7"></svg>
+          <h3>2×7×7<span class="ver">v7.2</span></h3>
+          <p>7×7 판 두 장을 포갠 넓은 판. 평면 바둑에 가깝지만, 위층 돌이 아래층 돌을 덮칩니다.</p>
+          <dl><dt>층</dt><dd>2층</dd><dt>교차점</dt><dd>98</dd><dt>덤</dt><dd>4.5</dd><dt>AI 등급</dt><dd>10단 → 1단</dd></dl>
+        </article>
+      </div>
+    </section>
+
+    <section id="rules" aria-labelledby="h-rules">
+      <h2 id="h-rules">규칙은 바둑 그대로</h2>
+      <p class="sub">달라지는 것은 ‘이웃’의 수뿐입니다. 나머지는 여러분이 아는 바둑과 같습니다.</p>
+      <div class="rules">
+        <div class="rule"><h3>여섯 방향으로 이어집니다</h3><p>앞·뒤·왼쪽·오른쪽에 위층과 아래층까지. 판 안쪽 점은 숨 쉴 곳이 최대 여섯 개입니다.</p></div>
+        <div class="rule"><h3>숨 쉴 곳을 모두 막으면 잡힙니다</h3><p>위·아래로 이어진 돌도 한 덩어리. 덩어리 둘레의 빈 점이 하나도 없으면 들어냅니다.</p></div>
+        <div class="rule"><h3>흑이 먼저, 백은 덤을 받습니다</h3><p>판마다 덤이 정해져 있고(0.5·3.5·4.5), 비기는 일이 없도록 반 집을 붙였습니다.</p></div>
+        <div class="rule"><h3>층을 고르고, 점을 두 번</h3><p>게임을 열면 가운데(또는 위) 층이 골라져 있습니다. 교차점을 한 번 누르면 선택, 한 번 더 누르면 착수.</p></div>
+      </div>
+    </section>
+
+    <section id="together" aria-labelledby="h-together">
+      <h2 id="h-together">함께 두는 세 가지 방법</h2>
+      <p class="sub">주소를 받은 친구도 같은 방법으로 바로 둘 수 있습니다.</p>
+      <div class="ways">
+        <div class="way"><h3>한 기기에서 마주 앉아</h3><p>메인 메뉴의 ‘친선 대국’. 휴대폰 하나를 가운데 두고 흑과 백이 번갈아 둡니다.</p></div>
+        <div class="way"><h3>AI에게 도전</h3><p>‘AI 도전’에서 초급·중급·고급을 고릅니다. 고급에서 이길 때마다 등급이 오릅니다.</p></div>
+        <div class="way"><h3>떨어져서 웹대국</h3><p>‘웹대국’의 친구 초대에서 네 자리 코드를 만들어 보내면, 친구가 링크나 코드로 들어와 각자 화면에서 둡니다. 대국 서버가 켜져 있어야 합니다.</p></div>
+      </div>
+    </section>
+
+    <section id="send" aria-labelledby="h-send">
+      <h2 id="h-send">친구에게 주소 보내기</h2>
+      <div class="send">
+        <ol class="steps">
+          <li><div><b>이 페이지 주소를 복사합니다</b><span>오른쪽 칸의 ‘복사’ 또는 위의 ‘친구에게 주소 보내기’를 누르세요.</span></div></li>
+          <li><div><b>메신저로 보냅니다</b><span>휴대폰에서는 공유 창이 열려 카카오톡·문자로 바로 보낼 수 있습니다.</span></div></li>
+          <li><div><b>친구가 열고 ‘지금 한 판 두기’</b><span>앱 설치도, 가입도 없습니다. 휴대폰과 컴퓨터 모두 됩니다.</span></div></li>
+        </ol>
+        <div class="share-box">
+          <label for="share-url">보낼 주소</label>
+          <div class="url-row">
+            <input id="share-url" type="text" readonly value="">
+            <button class="btn primary" type="button" data-copy>복사</button>
+          </div>
+          <p class="note" id="share-note">받은 사람이 이 주소를 열면 이 홈페이지가 보이고, ‘지금 한 판 두기’로 게임이 열립니다.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>HANOK3D GO · 공간바둑 空棋</span>
+    <span>소리는 화면을 처음 누를 때 켜집니다 · 게임 안 ‘규칙’에서 자세한 설명을 볼 수 있어요</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  /* ---------- 보낼 주소 ---------- */
+  const isWeb = /^https?:$/.test(location.protocol);
+  const pageUrl = isWeb ? location.href.replace(/[?#].*$/, "") : "";
+  const urlInput = document.getElementById("share-url");
+  const note = document.getElementById("share-note");
+  if (isWeb) urlInput.value = pageUrl;
+  else {
+    urlInput.value = "인터넷에 올린 뒤의 주소가 여기에 나옵니다";
+    note.textContent = "지금은 컴퓨터 안의 파일로 열려 있어서 보낼 주소가 없습니다. 함께 받은 안내(README)대로 인터넷에 올리면, 그 주소를 친구에게 보내면 됩니다.";
+    note.classList.add("warn");
+  }
+  const toastEl = document.getElementById("toast");
+  let toastT = 0;
+  function toast(t) {
+    toastEl.textContent = t; toastEl.classList.add("show");
+    clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("show"), 2200);
+  }
+  const shareText = "공간바둑(HANOK3D GO) 한 판 두자! 링크를 열고 ‘지금 한 판 두기’를 누르면 바로 시작돼요.";
+  async function copy() {
+    if (!isWeb) { toast("인터넷에 올린 뒤에 주소를 보낼 수 있어요"); return; }
+    try { await navigator.clipboard.writeText(shareText + "\n" + pageUrl); toast("주소를 복사했어요. 메신저에 붙여 넣으세요"); }
+    catch (e) { urlInput.focus(); urlInput.select(); toast("주소를 길게 눌러 복사하세요"); }
+  }
+  async function share() {
+    if (!isWeb) { toast("인터넷에 올린 뒤에 주소를 보낼 수 있어요"); return; }
+    if (navigator.share) {
+      try { await navigator.share({ title: "공간바둑 HANOK3D GO", text: shareText, url: pageUrl }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }
+    }
+    copy();
+  }
+  document.querySelectorAll("[data-share]").forEach(b => b.addEventListener("click", share));
+  document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", copy));
+
+  /* ---------- 판 그림 (작은 등각 큐브) ---------- */
+  document.querySelectorAll("svg[data-mini]").forEach(svg => {
+    const [L, N] = svg.dataset.mini.split(",").map(Number);
+    const W = 132, s = 84 / (N - 1 || 1) / 1.42, h = L > 2 ? 15 : 22, ox = 66, oy = 16;
+    const P = (x, z, y) => [ox + (x - z) * s * 0.98, oy + (x + z) * s * 0.52 + (L - 1 - y) * h];
+    let out = "";
+    for (let y = 0; y < L; y++) {
+      const col = y === Math.floor(L / 2) ? "var(--cube-mid)" : "var(--cube)";
+      const w = y === L - 1 ? 1.6 : 1;
+      for (let k = 0; k < N; k++) {
+        const a = P(k, 0, y), b = P(k, N - 1, y), c = P(0, k, y), d = P(N - 1, k, y);
+        out += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width="${w}"/>`;
+        out += `<line x1="${c[0]}" y1="${c[1]}" x2="${d[0]}" y2="${d[1]}" stroke="${col}" stroke-width="${w}"/>`;
+      }
+    }
+    for (const [x, z] of [[0, 0], [N - 1, 0], [0, N - 1], [N - 1, N - 1]]) {
+      const a = P(x, z, 0), b = P(x, z, L - 1);
+      out += `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--cube)" stroke-width="1"/>`;
+    }
+    svg.setAttribute("viewBox", `0 0 ${W} ${oy * 2 + (N - 1) * s * 1.04 + (L - 1) * h + 6}`);
+    svg.innerHTML = out;
+  });
+
+  /* ---------- 첫 화면: 천천히 도는 3×3×3 ---------- */
+  const cv = document.getElementById("cube"), g = cv.getContext("2d");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const N = 3, C = (N - 1) / 2;
+  const stones = [[1,1,1,1],[0,1,1,2],[2,1,0,1],[1,2,1,2],[2,0,2,1],[0,0,0,2],[1,0,2,2],[2,2,2,1],[0,2,1,1],[1,1,0,2]];   // x, y(층), z, 1흑 2백
+  let th = 0.62, ph = 1.0, drag = null, last = performance.now();
+  function size() {
+    const r = cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+  }
+  function proj(x, y, z) {
+    const X = x - C, Y = y - C, Z = z - C;
+    const ct = Math.cos(th), st = Math.sin(th), cp = Math.cos(ph), sp = Math.sin(ph);
+    const x1 = X * ct - Z * st, z1 = X * st + Z * ct;
+    const y2 = Y * sp - z1 * cp, z2 = Y * cp + z1 * sp;
+    const D = 7, f = D / (D - z2), S = cv.width * 0.2;
+    return [cv.width / 2 + x1 * S * f, cv.height * 0.5 - y2 * S * f, z2, f];
+  }
+  function draw() {
+    const W = cv.width; g.clearRect(0, 0, W, cv.height);
+    const line = css("--cube"), mid = css("--cube-mid"), sb = css("--stone-b"), sw = css("--stone-w");
+    g.lineCap = "round";
+    for (let y = 0; y < N; y++) for (let k = 0; k < N; k++) {
+      g.strokeStyle = y === 1 ? mid : line; g.lineWidth = (y === 2 ? 2.2 : y === 1 ? 1.6 : 1) * W / 640;
+      let a = proj(0, y, k), b = proj(N - 1, y, k); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+      a = proj(k, y, 0); b = proj(k, y, N - 1); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+    }
+    g.strokeStyle = line; g.lineWidth = W / 640;
+    for (let x = 0; x < N; x++) for (let z = 0; z < N; z++) {
+      const a = proj(x, 0, z), b = proj(x, N - 1, z); g.beginPath(); g.moveTo(a[0], a[1]); g.lineTo(b[0], b[1]); g.stroke();
+    }
+    const list = stones.map(s => ({ s, p: proj(s[0], s[1], s[2]) })).sort((a, b) => a.p[2] - b.p[2]);
+    for (const { s, p } of list) {
+      const r = W * 0.04 * p[3], black = s[3] === 1;
+      const gr = g.createRadialGradient(p[0] - r * 0.35, p[1] - r * 0.4, r * 0.1, p[0], p[1], r);
+      if (black) { gr.addColorStop(0, "#5a5a56"); gr.addColorStop(0.45, sb); gr.addColorStop(1, "#000"); }
+      else { gr.addColorStop(0, "#ffffff"); gr.addColorStop(0.55, sw); gr.addColorStop(1, "#b9ae95"); }
+      g.fillStyle = gr; g.beginPath(); g.arc(p[0], p[1], r, 0, Math.PI * 2); g.fill();
+    }
+  }
+  function tick(t) {
+    const dt = Math.min(64, t - last); last = t;
+    if (!drag && !reduce) th += dt * 0.00018;
+    draw(); requestAnimationFrame(tick);
+  }
+  cv.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, th, ph }; cv.setPointerCapture(e.pointerId); cv.style.cursor = "grabbing"; });
+  cv.addEventListener("pointermove", e => {
+    if (!drag) return;
+    th = drag.th + (e.clientX - drag.x) * 0.008;
+    ph = Math.max(0.35, Math.min(1.45, drag.ph - (e.clientY - drag.y) * 0.006));
+  });
+  const end = () => { drag = null; cv.style.cursor = ""; };
+  cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+  window.addEventListener("resize", size);
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  size(); requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
