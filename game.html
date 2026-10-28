@@ -3290,6 +3290,7 @@ body.theater-mode .rv-btn.lens-btn svg { width: 28px; height: 28px; }
     window.HanokApp.stopSpeak = function () { try { N.stopSpeak(); } catch (e) {} };
   }
   function onBack() {
+    if (window.__hpCloseSheet && window.__hpCloseSheet()) return;
     var $ = function (id) { return document.getElementById(id); };
     var shown = function (id) { var e = $(id); return !!e && e.classList.contains("show"); };
     var esc = function () { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); };
@@ -3433,6 +3434,165 @@ html body:not(.theater-mode) .corner-tools .btn-header { width: var(--sq-row, 38
   #intro .intro-caption .intro-tag { font-size: 0.74rem !important; }
 }
 </style>
+<style id="hp-style">
+/* ================= HANOK PLUS (2026-10 상업화 보강) — 새 기능 화면만. 기존 스타일은 건드리지 않음 ================= */
+:root { --hp-gold: #fde68a; --hp-gold2: #d99a0b; --hp-ink: #fff6dc; --hp-bg: rgba(18, 12, 4, 0.96); --hp-line: rgba(253, 230, 138, 0.38); }
+#hp-sheet, #hp-ad { position: fixed; inset: 0; z-index: 2147481000; display: none; align-items: center; justify-content: center;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px)); background: rgba(0, 0, 0, 0.62); }
+#hp-sheet.show, #hp-ad.show { display: flex; animation: hpFade 0.18s ease; }
+#hp-ad { z-index: 2147481500; background: rgba(0, 0, 0, 0.82); }
+@keyframes hpFade { from { opacity: 0; } to { opacity: 1; } }
+.hp-card { position: relative; width: min(440px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box;
+  padding: 18px 16px 16px; border-radius: 16px; background: var(--hp-bg); border: 1px solid var(--hp-line); color: var(--hp-ink);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6); font-family: "Noto Sans KR", system-ui, sans-serif; }
+.hp-card h3 { margin: 0 34px 10px 0; font-size: 1.08rem; color: var(--hp-gold); }
+.hp-card h4 { margin: 14px 0 6px; font-size: 0.82rem; color: var(--hp-gold); letter-spacing: 0.02em; }
+.hp-p { margin: 0 0 10px; font-size: 0.86rem; line-height: 1.5; }
+.hp-note { margin: 8px 0 0; font-size: 0.74rem; line-height: 1.45; color: rgba(255, 246, 220, 0.72); }
+.hp-note.ok { color: #9be7a8; font-weight: 700; }
+.hp-x { all: unset; position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  color: var(--hp-gold); border: 1px solid var(--hp-line); font-size: 0.9rem; }
+.hp-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.hp-acts .hp-btn { flex: 1 1 140px; }
+.hp-btn { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 12px;
+  border-radius: 11px; cursor: pointer; font-weight: 800; font-size: 0.86rem; text-align: center; line-height: 1.2;
+  background: linear-gradient(180deg, var(--hp-gold), var(--hp-gold2)); color: #3a2404; border: 1px solid #fff1b8;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.hp-btn.ghost { background: rgba(253, 230, 138, 0.08); color: var(--hp-gold); border-color: var(--hp-line); }
+.hp-btn.ad { background: linear-gradient(180deg, #7dd3fc, #2563eb); color: #fff; border-color: #bfe3ff; }
+.hp-btn.sm { min-height: 32px; padding: 0 10px; font-size: 0.78rem; }
+.hp-btn.wide { display: flex; width: 100%; margin-top: 6px; }
+.hp-btn[disabled] { opacity: 0.42; cursor: default; filter: grayscale(0.4); }
+.hp-btn:focus-visible, .hp-x:focus-visible { outline: 2px solid #ffd54a; outline-offset: 2px; }
+.hp-orbline { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(253, 230, 138, 0.08); font-size: 0.84rem; }
+.hp-orbline b { margin-left: auto; font-size: 1.05rem; color: var(--hp-gold); font-variant-numeric: tabular-nums; }
+.hp-orbline.big b { font-size: 1.4rem; }
+.hp-gem { width: 18px; height: 18px; border-radius: 50%; flex: none; background: radial-gradient(circle at 35% 30%, #fff 0 12%, #8be9ff 28%, #2a7bd8 62%, #10306a 100%); box-shadow: 0 0 10px rgba(120, 200, 255, 0.6); }
+.hp-skins { display: grid; gap: 6px; }
+.hp-skin { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 10px; border: 1px solid transparent; }
+.hp-skin.on { border-color: var(--hp-line); background: rgba(253, 230, 138, 0.06); }
+.hp-skin-n { flex: 1; font-size: 0.86rem; font-weight: 700; }
+.hp-sw { position: relative; width: 44px; height: 24px; flex: none; }
+.hp-sw::before, .hp-sw::after { content: ""; position: absolute; top: 1px; width: 22px; height: 22px; border-radius: 50%; box-shadow: inset -3px -3px 6px rgba(0, 0, 0, 0.35), inset 3px 3px 5px rgba(255, 255, 255, 0.25); }
+.hp-sw::before { left: 0; background: var(--a); }
+.hp-sw::after { left: 18px; background: var(--b); }
+.hp-pz { padding: 10px; border-radius: 12px; border: 1px solid var(--hp-line); margin-bottom: 10px; }
+.hp-pz-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.hp-pz-h b { color: var(--hp-gold); }
+.hp-pz-h span { font-size: 0.76rem; opacity: 0.8; font-variant-numeric: tabular-nums; }
+.hp-streak { margin: 0; font-size: 0.82rem; }
+.hp-bar { height: 8px; border-radius: 8px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.hp-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--hp-gold), var(--hp-gold2)); }
+.hp-shot { display: grid; place-items: center; min-height: 160px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); overflow: hidden; font-size: 0.8rem; }
+.hp-shot img { display: block; width: 100%; height: auto; }
+#hp-sheet textarea { width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid var(--hp-line); background: rgba(0, 0, 0, 0.4); color: var(--hp-ink); padding: 8px; font: 0.78rem/1.4 ui-monospace, monospace; resize: vertical; }
+.hp-ad-card { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 28px; border-radius: 16px; background: var(--hp-bg); border: 1px solid var(--hp-line); color: var(--hp-ink); text-align: center; min-width: 220px; }
+.hp-ad-card span { font-size: 1.6rem; font-weight: 900; color: var(--hp-gold); font-variant-numeric: tabular-nums; }
+.hp-ad-card button[hidden] { display: none; }
+/* 작은 알림 (여의주 +3 등) */
+#hp-pop { position: fixed; left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -140%); z-index: 2147480500; pointer-events: none;
+  padding: 7px 14px; border-radius: 999px; background: rgba(18, 12, 4, 0.92); border: 1px solid var(--hp-gold); color: var(--hp-gold); font: 800 0.86rem "Noto Sans KR", sans-serif;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); transition: transform 0.35s cubic-bezier(.2, .9, .3, 1.3); }
+#hp-pop.show { transform: translate(-50%, 0); }
+/* 승리 공유 막대 */
+#hp-winbar { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 160%); z-index: 2147480000;
+  display: flex; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 20px); box-sizing: border-box; padding: 8px 8px 8px 14px; border-radius: 14px;
+  background: rgba(18, 12, 4, 0.95); border: 1px solid var(--hp-gold); color: var(--hp-ink); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+  font: 700 0.82rem "Noto Sans KR", sans-serif; transition: transform 0.4s cubic-bezier(.2, .9, .3, 1.2); }
+#hp-winbar.show { transform: translate(-50%, 0); }
+#hp-winbar .hp-wb-t { min-width: 0; }
+#hp-winbar .hp-btn { white-space: nowrap; flex: none; }
+.hp-wb-x { all: unset; cursor: pointer; width: 28px; height: 28px; display: grid; place-items: center; color: var(--hp-gold); flex: none; }
+@media (prefers-reduced-motion: reduce) { #hp-pop, #hp-winbar { transition: none; } }
+/* 결과 창: 공유 버튼은 끝난 판에서만, 두 칸을 다 씀 */
+#result-modal .res-actions .hp-res-share { display: none; grid-column: 1 / -1; }
+#result-modal.final .res-actions .hp-res-share { display: inline-flex; align-items: center; justify-content: center; }
+/* 메인 메뉴 아이콘: 사활(빨간 점) · 상점(여의주 수) */
+.menu-icons .mi .mi-ico { position: relative; }
+.menu-icons .hp-dot { position: absolute; top: 1px; right: 1px; width: 9px; height: 9px; border-radius: 50%; background: #ff4d3d; box-shadow: 0 0 0 2px rgba(20, 10, 4, 0.9); }
+.menu-icons .hp-dot[hidden] { display: none; }
+.menu-icons .hp-orb-badge { position: absolute; right: -6px; bottom: -4px; min-width: 16px; padding: 0 4px; box-sizing: border-box; border-radius: 8px; font: 800 9px/15px "Noto Sans KR", sans-serif; font-style: normal;
+  color: #062038; background: linear-gradient(180deg, #bdeaff, #4aa8f0); border: 1px solid #e6f6ff; text-align: center; }
+/* AI 훈수 버튼: 소리 아이콘 묶음(.corner-tools) 안 — 세로 화면은 소리 위, 대화면은 소리 아래. AI 도전에서만 보임 */
+#corner-tools, .corner-tools { flex-direction: column !important; align-items: center !important; gap: 6px !important; }
+#btn-hint { display: none !important; position: relative; order: -1; }
+body.theater-mode #btn-hint { order: 1; }
+body.vs-ai:not(.online-play):not(.tutorial-on):not(.review-mode) #btn-hint { display: inline-flex !important; align-items: center; justify-content: center; }
+#btn-hint { background: radial-gradient(circle at 35% 28%, #fff7c2 0%, #f2c230 55%, #a36a06 100%) !important; color: #3a2404 !important; border-color: #fff1b8 !important; box-shadow: 0 0 10px rgba(255, 210, 80, 0.55) !important; }
+#btn-hint svg { fill: none !important; stroke: currentColor !important; stroke-width: 2 !important; stroke-linecap: round; stroke-linejoin: round; }
+#btn-hint.busy { animation: rvPulse 1s ease-in-out infinite; }
+#btn-hint.on { box-shadow: 0 0 0 2px #fff, 0 0 16px rgba(255, 220, 90, 0.9) !important; }
+#btn-hint .hp-cnt { position: absolute; top: -6px; right: -6px; min-width: 15px; height: 15px; padding: 0 3px; box-sizing: border-box; border-radius: 8px; font: 800 9px/14px "Noto Sans KR", sans-serif; font-style: normal;
+  color: #3a2404; background: #fff; border: 1px solid #f2c230; text-align: center; }
+#btn-hint .hp-cnt.paid { background: #4aa8f0; color: #fff; border-color: #e6f6ff; }
+#btn-hint .hp-cnt.vip { background: #7c3aed; color: #fff; border-color: #e9d5ff; }
+/* 웹대국 기다림: AI 연습 상대 안내 */
+.onl-bot { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 4px 0 8px; font-size: 0.78rem; opacity: 0.9; text-align: center; }
+.onl-bot[hidden] { display: none; }
+/* (기존 버그 수정) 랜덤 매칭 기다림 화면에 빈 '초대 코드 ----'가 보이던 문제: hidden 속성을 지킴 */
+.onl-codebox[hidden] { display: none; }
+
+/* 사활·상점 아이콘: 다른 메뉴 아이콘과 다르게 (옥색 큐브 · 푸른 여의주) */
+.menu-icons .mi[data-hp="puzzle"] .mi-ico { background: radial-gradient(circle at 35% 28%, #5fe0b0 0%, #128a62 48%, #063b2a 100%) !important; border-color: #9ff3d2 !important; color: #effff8 !important; box-shadow: 0 0 12px rgba(80, 230, 170, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important; }
+.menu-icons .mi[data-hp="shop"] .mi-ico { background: radial-gradient(circle at 35% 28%, #b6ecff 0%, #3b8fe0 45%, #10306a 100%) !important; border-color: #cfeeff !important; color: #ffffff !important; box-shadow: 0 0 12px rgba(110, 190, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important; }
+.menu-icons .mi[data-hp="puzzle"] .hp-stone { fill: currentColor; stroke: none; }
+.menu-icons .mi[data-hp="puzzle"] .mi-label { color: #b8f5dc; }
+.menu-icons .mi[data-hp="shop"] .mi-label { color: #bfe6ff; }
+/* 사활 창: 판 고르기 */
+.hp-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
+.hp-tab { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 4px; border-radius: 11px;
+  border: 1px solid var(--hp-line); background: rgba(253, 230, 138, 0.06); color: var(--hp-ink); -webkit-tap-highlight-color: transparent; }
+.hp-tab b { font: 900 0.92rem "Noto Sans KR", sans-serif; }
+.hp-tab small { font-size: 0.68rem; opacity: 0.85; font-variant-numeric: tabular-nums; }
+.hp-tab.on { border-color: #fff1b8; box-shadow: 0 0 0 2px rgba(253, 230, 138, 0.35) inset; }
+.hp-tab.g-jamyong.on { background: linear-gradient(180deg, #8a5a2a, #4a2c10); }
+.hp-tab.g-m355.on { background: linear-gradient(180deg, #2c4f9c, #12285a); }
+.hp-tab.g-m277.on { background: linear-gradient(180deg, #2f7a4f, #12402a); }
+.hp-tab:focus-visible { outline: 2px solid #ffd54a; outline-offset: 2px; }
+
+/* 패스·교구 인증 아이콘 (금빛 열쇠, 멤버면 별) */
+.menu-icons .mi[data-hp="pass"] .mi-ico { background: radial-gradient(circle at 35% 28%, #fff1b0 0%, #d99a0b 48%, #6a3a04 100%) !important; border-color: #fff1b8 !important; color: #3a2404 !important; box-shadow: 0 0 12px rgba(255, 200, 80, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important; }
+.menu-icons .mi[data-hp="pass"] .mi-label { color: #ffe9a8; }
+.menu-icons .hp-star { display: none; position: absolute; right: -5px; top: -5px; font: 900 11px/1 sans-serif; font-style: normal; color: #fff; background: #7c3aed; border-radius: 50%; width: 16px; height: 16px; line-height: 16px; text-align: center; box-shadow: 0 0 0 2px rgba(20, 10, 4, 0.9); }
+.menu-icons .mi.vip .hp-star { display: block; }
+.hp-btn.vip { background: linear-gradient(180deg, #c4b5fd, #7c3aed); color: #fff; border-color: #ede9fe; }
+.hp-member { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--hp-line); background: rgba(255, 255, 255, 0.04); }
+.hp-member.on { background: linear-gradient(90deg, rgba(124, 58, 237, 0.35), rgba(124, 58, 237, 0.08)); border-color: #c4b5fd; }
+.hp-member span { font-size: 0.78rem; opacity: 0.9; }
+.hp-benefits { margin: 8px 0 0; padding-left: 18px; font-size: 0.8rem; line-height: 1.6; }
+.hp-f { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: 0.78rem; }
+.hp-f input { box-sizing: border-box; width: 100%; padding: 9px 10px; border-radius: 9px; border: 1px solid var(--hp-line); background: rgba(0, 0, 0, 0.4); color: var(--hp-ink); font: 0.9rem "Noto Sans KR", sans-serif; }
+.hp-chk { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; font-size: 0.74rem; line-height: 1.45; }
+.hp-chk input { margin-top: 2px; width: 18px; height: 18px; flex: none; }
+/* 등급 창: 공간 두뇌 발달 지수 · 급수 신청 */
+.rank-info { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; }
+.bi-wrap { margin-top: 10px; padding: 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(253, 230, 138, 0.25); }
+.bi-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8rem; color: var(--text-main, #fff6dc); }
+.bi-vip { font-size: 0.62rem; padding: 1px 6px; border-radius: 6px; background: #7c3aed; color: #fff; }
+.bi-row { display: grid; grid-template-columns: max-content 1fr 2.2em max-content; gap: 6px; align-items: center; margin: 4px 0; font-size: 0.68rem; color: var(--text-sub, #e9dcc0); }
+.bi-bar { height: 9px; border-radius: 6px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+.bi-bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #5fe0b0, #fde68a); transition: width 0.6s ease; }
+.bi-v { text-align: right; color: var(--text-main, #fff6dc); font-variant-numeric: tabular-nums; }
+.bi-g { font-style: normal; font-size: 0.6rem; opacity: 0.8; }
+.bi-n, .bi-note { margin: 4px 0 0; font-size: 0.58rem; line-height: 1.45; color: var(--text-dim, #b9a98a); }
+.bi-how { margin-top: 4px; font-size: 0.58rem; color: var(--text-dim, #b9a98a); }
+.bi-how summary { cursor: pointer; }
+.bi-how p { margin: 3px 0; }
+.bi-acts { display: grid; grid-template-columns: 1fr 1.4fr; gap: 6px; margin-top: 8px; }
+.bi-acts .btn { height: 32px; font-size: 0.66rem; }
+.bi-acts .btn[disabled] { opacity: 0.45; }
+
+.bi-l, .bi-g { white-space: nowrap; }
+.bi-l { min-width: 5.4em; }
+
+/* 개인정보처리방침 링크·내용 */
+.hp-privacy-link { all: unset; display: block; margin: 6px auto 0; padding: 4px 10px; font: 600 0.7rem "Noto Sans KR", sans-serif; color: rgba(255, 244, 214, 0.75); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.hp-privacy-link:focus-visible, .hp-linkbtn:focus-visible { outline: 2px solid #ffd54a; outline-offset: 2px; border-radius: 4px; }
+.hp-linkbtn { all: unset; display: block; margin: 12px auto 0; font-size: 0.74rem; color: rgba(255, 244, 214, 0.75); text-decoration: underline; cursor: pointer; }
+.hp-policy { font-size: 0.78rem; line-height: 1.55; }
+.hp-policy h4 { margin: 10px 0 2px; }
+.hp-policy p { margin: 0 0 4px; }
+</style>
 </head>
 <body class="theme-wood mode-jamyong intro-open" data-attract="0" data-attract-moves="44" data-attract-ms="700" data-menu-mode="m277">
 <div id="app-splash" role="dialog" aria-label="시작 영상">
@@ -3482,6 +3642,11 @@ html body:not(.theater-mode) .corner-tools .btn-header { width: var(--sq-row, 38
   window.HanokBigScreenEnd = () => { if (document.body.classList.contains("theater-on")) return;   /* 대화면이면 가로 유지 */
     try { if (!lockPortrait() && screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (_) {} };
   /* (2026-10 수정) 대화면 버튼을 가로채 회전 고정을 바꾸던 코드는 대화면 코드와 충돌해서 제거 */
+  /* (2026-10 상업화 보강) 시작 영상은 처음 실행 때 한 번만 → 두 번째부터는 바로 메인 메뉴 (주소에 ?splash=1 이면 다시 봄).
+     초대 링크(/j/1234)로 들어온 사람도 영상 없이 바로 대국으로 */
+  let splashSeen = false; try { splashSeen = localStorage.getItem("hanok3d:splashSeen") === "1"; } catch (_) {}
+  const viaInvite = /\/j\/\d{4}\/?$/.test(location.pathname) || /[?&]join=\d{4}/.test(location.search);
+  if ((splashSeen || viaInvite) && !/[?&]splash=1\b/.test(location.search)) { el.remove(); if (data) data.remove(); return; }
   const label = () => {
     const on = !v.muted;
     sb.innerHTML = on ? '<span aria-hidden="true">🔊</span> <span>소리 끄기</span>' : '<span aria-hidden="true">🔇</span> <span>소리 켜기</span>';
@@ -3489,6 +3654,7 @@ html body:not(.theater-mode) .corner-tools .btn-header { width: var(--sq-row, 38
   };
   const finish = () => {
     if (done) return; done = true; clearTimeout(timer);
+    try { localStorage.setItem("hanok3d:splashSeen", "1"); } catch (_) {}
     try { v.pause(); } catch (_) {}
     window.HanokBigScreenEnd();
     el.classList.add("hide");
@@ -3961,7 +4127,6 @@ html body:not(.theater-mode) .corner-tools .btn-header { width: var(--sq-row, 38
         <span class="mi-label">언어</span>
       </div>
       <button type="button" class="mi" data-action="help"><span class="mi-ico"><svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l7.6 4.3v8.9L12 20.8l-7.6-4.4V7.5z"/><path d="M4.4 7.5L12 11.9l7.6-4.4M12 11.9v8.9"/></svg></span><span class="mi-label">조작법</span></button>
-      <button type="button" class="mi" data-action="rank"><span class="mi-ico"><svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8v4.5a4 4 0 0 1-8 0z"/><path d="M8 6H5.2a2.8 2.8 0 0 0 3.2 3.6M16 6h2.8a2.8 2.8 0 0 1-3.2 3.6M12 12.5v3.5M8.5 20h7M10 16h4v4h-4z"/></svg></span><span class="mi-label">승률</span></button>
       <button type="button" class="mi" data-action="rules"><span class="mi-ico"><svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3M8.5 7h7M8.5 10.5h7"/></svg></span><span class="mi-label">규칙</span></button>
       <button type="button" class="mi" data-action="exit"><span class="mi-ico"><svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v8.5"/><path d="M6.6 6.8a7.6 7.6 0 1 0 10.8 0"/></svg></span><span class="mi-label">종료</span></button>
     </div>
@@ -4526,6 +4691,79 @@ if (typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScop
   };
 }
 
+</script>
+<script id="hp-puzzlegen">
+/* 공간사활 문제 만들기 (순수 함수 · 규칙 엔진 HanokRules로 정답을 검증)
+   - 같은 seed는 어느 기기에서나 같은 문제 (xorshift32 정수 난수)
+   - kind "cap": 흑 차례, 한 수로 백 돌을 가장 많이 따내는 자리가 '딱 하나'인 판
+   - kind "esc": 흑 차례, 단수(활로 1개)에 몰린 흑 무리를 살리는(활로 2개 이상) 자리가 '딱 하나'인 판
+   반환: { n, l, kind, black:[...], white:[...], answer, target, need } 또는 null */
+function hpMakePuzzle(Rules, seedStr, kind, n, l) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seedStr.length; i++) { h ^= seedStr.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  let s = h || 1;
+  const rnd = () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; };
+  const R = Rules.create(n, l), T = R.TOTAL;
+  const minCap = T <= 27 ? 2 : 3;
+  const MAX = 2500;
+  for (let attempt = 0; attempt < MAX; attempt++) {
+    const strict = attempt < MAX * 0.4;
+    const capMin = attempt < MAX * 0.7 ? minCap : 2;                       // 처음에는 '위·아래 층'이 얽힌 문제만 고름
+    let b = new Int8Array(T);
+    const stones = Math.round(T * (0.34 + rnd() * 0.16));
+    let color = 1, placed = 0, guard = 0;
+    while (placed < stones && guard++ < T * 6) {
+      const i = Math.floor(rnd() * T);
+      if (b[i]) continue;
+      const r = R.tryPlay(b, i, color, null);
+      if (!r.ok || r.captured.length) continue;           // 따냄 없이 쌓인 판 (모양이 깔끔)
+      b = r.next; placed++; color = 3 - color;
+    }
+    const moves = [];
+    for (let i = 0; i < T; i++) if (!b[i]) { const r = R.tryPlay(b, i, 1, null); if (r.ok) moves.push([i, r]); }
+    if (moves.length < 4) continue;
+    if (kind === "cap") {
+      let best = 0, cnt = 0, ans = -1, cap = null;
+      for (const [i, r] of moves) {
+        const c = r.captured.length;
+        if (c > best) { best = c; cnt = 1; ans = i; cap = r.captured; } else if (c === best && c > 0) cnt++;
+      }
+      if (best < capMin || cnt !== 1) continue;
+      const ay = R.coord(ans).y;
+      const vertical = cap.some(st => R.coord(st).y !== ay) || new Set(cap.map(st => R.coord(st).y)).size > 1;
+      if (strict && !vertical) continue;
+      return pack(b, ans, cap.slice().sort((a, c) => a - c), best);
+    } else {
+      /* 단수에 몰린 흑 무리 (2점 이상) 하나를 고름 */
+      const seen = new Uint8Array(T);
+      let tgt = null;
+      for (let i = 0; i < T && !tgt; i++) {
+        if (b[i] !== 1 || seen[i]) continue;
+        const g = R.getGroup(b, i); g.stones.forEach(st => { seen[st] = 1; });
+        if (g.liberties === 1 && g.stones.length >= (capMin > 2 || attempt < MAX * 0.7 ? 2 : 1)) tgt = g;
+      }
+      if (!tgt) continue;
+      const anchor = tgt.stones[0], ok = [];
+      for (const [i, r] of moves) if (r.next[anchor] === 1 && R.getGroup(r.next, anchor).liberties >= 2) ok.push(i);
+      if (ok.length !== 1) continue;
+      const ans = ok[0], ay = R.coord(ans).y;
+      if (strict && !tgt.stones.some(st => R.coord(st).y !== ay)) continue;
+      return pack(b, ans, tgt.stones.slice().sort((a, c) => a - c), tgt.stones.length);
+    }
+  }
+  return null;
+  function pack(b, ans, target, need) {
+    const black = [], white = [];
+    for (let i = 0; i < T; i++) { if (b[i] === 1) black.push(i); else if (b[i] === 2) white.push(i); }
+    return { n, l, kind, black, white, answer: ans, target, need };
+  }
+}
+/* 실패하면 (드묾) 같은 날짜·번호에서 정해진 순서로 다른 씨앗 → 다른 종류로 바꿔 시도: 어느 기기에서나 같은 결과 */
+function hpPuzzleFor(Rules, seedStr, kind, n, l) {
+  return hpMakePuzzle(Rules, seedStr, kind, n, l) || hpMakePuzzle(Rules, seedStr + "#2", kind, n, l)
+    || hpMakePuzzle(Rules, seedStr + "#3", kind === "cap" ? "esc" : "cap", n, l) || hpMakePuzzle(Rules, seedStr + "#4", kind === "cap" ? "esc" : "cap", n, l);
+}
+if (typeof module === "object") module.exports = hpPuzzleFor;
 </script>
 <script>/* three.js r128 (MIT) */
 /**
@@ -5657,7 +5895,7 @@ function clockPaused() {
   if (!board || isGameOver || tutorial || countPreview || gameType !== "go") return true;
   if (document.body.classList.contains("intro-open") || document.hidden || window.__hanokOff) return true;
   if (vsAI && currentTurn === AI_COLOR) return true;
-  return ["rules-modal", "help-modal", "rank-modal", "confirm-modal", "exit-screen"].some(id => {
+  return ["rules-modal", "help-modal", "rank-modal", "confirm-modal", "exit-screen", "hp-sheet", "hp-ad"].some(id => {
     const el = document.getElementById(id); return !!el && el.classList.contains("show");
   });
 }
@@ -7162,6 +7400,32 @@ function initThreeEngine() {
 
 
   MODE_KEYS.forEach(k => { STONES[k] = STONES.jamyong; });   // 모든 판 같은 흑백 돌
+
+  /* (2026-10 상업화 보강) 돌 스킨: 모든 판이 함께 쓰는 흑백 돌 재질의 색·광택만 바꿈. null이면 원래 돌 */
+  const SKIN_KEYS = ["solid", "dim", "lit", "pick"], SKIN_PROPS = ["roughness", "metalness", "clearcoat", "clearcoatRoughness"];
+  const skinBase = (() => {
+    const S = STONES.jamyong, o = { ghost: {}, terr: {} };
+    SKIN_KEYS.forEach(k => { o[k] = {}; [1, 2].forEach(c => { const m = S[k][c]; o[k][c] = { color: m.color.getHex() }; SKIN_PROPS.forEach(p => { o[k][c][p] = m[p]; }); }); });
+    [1, 2].forEach(c => { o.ghost[c] = S.ghost[c].color.getHex(); o.terr[c] = S.terr[c].color.getHex(); });
+    return o;
+  })();
+  function setStoneSkin(sk) {
+    const S = STONES.jamyong;
+    [1, 2].forEach(c => {
+      const sp = sk && sk[c];
+      SKIN_KEYS.forEach(k => {
+        const m = S[k][c], base = skinBase[k][c];
+        if (!sp) m.color.setHex(base.color);
+        else if (k === "lit") m.color.copy(new THREE.Color(sp.color).lerp(new THREE.Color(0xffd860), 0.3));   // 상대가 방금 둔 돌: 약간 노란빛
+        else m.color.setHex(sp.color);
+        SKIN_PROPS.forEach(p => { if (p in m) m[p] = sp && sp[p] != null ? sp[p] : base[p]; });
+        m.needsUpdate = true;
+      });
+      S.ghost[c].color.setHex(sp ? sp.ghost : skinBase.ghost[c]);
+      S.terr[c].color.setHex(sp ? sp.color : skinBase.terr[c]);
+    });
+    requestRender();
+  }
 
   /* ---- 중심부 발광 볼륨 (등용문 테마에서만) ---- */
   const sphereMat = new THREE.ShaderMaterial({
@@ -8842,6 +9106,8 @@ function initThreeEngine() {
     clearAnims() { anims.clear(); clearFlashes(); clearEndFx(); },
     endingFx,
     celebrate(n) { if (!REDUCED) screenStarShower(n || 10); },
+    setStoneSkin,
+    capture() { renderer.render(scene, camera); return renderer.domElement.toDataURL("image/png"); },   // 공유 카드용 (그린 직후라 그림이 남아 있음)
     tutorialView(on) {                    // 튜토리얼: 아래 안내 패널을 피해 큐브를 화면 위쪽에 작게
       atDefault = !on;
       if (on) tweenTo(0.85, 1.08, fitRadius() * 1.22, new THREE.Vector3(0, -CENTER * 0.85, 0));
@@ -9665,7 +9931,7 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
     ONLINE.pendingTimeout = clock.outs[who] + 1;
     _onTimeout();
     ONLINE.pendingTimeout = 0;
-    if (isGameOver && timeLoser === who) send({ t: "x", c: who });   // 시간 초과 3회: 시간패
+    if (isGameOver && timeLoser === who) { send({ t: "x", c: who }); if (window.__hpOnlineEnd) window.__hpOnlineEnd(-1); }   // 시간 초과 3회: 시간패
   };
 
   /* ---------- 서버와 주고받기 ---------- */
@@ -9685,6 +9951,7 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
       historyStack.push(snapshot()); clock.outs[ev.c] = MAX_TIMEOUTS; timeLoser = ev.c;
       endGame(`${NAME[ev.c]} 시간 초과 ${MAX_TIMEOUTS}회 · ${NAME[3 - ev.c]} 시간승`, "end");
       if (3 - ev.c === ONLINE.color) celebrateWin(3 - ev.c);
+      if (window.__hpOnlineEnd) window.__hpOnlineEnd(3 - ev.c === ONLINE.color ? 1 : -1);
       return true;
     }
     if (ev.t === "d") { if (!scoring) return false; return toggleDeadAt(ev.i, true); }
@@ -9713,6 +9980,7 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
     finalizeScoring();
     const t = scoreTotals();
     if (t) ONLINE.result = t.b === t.w ? "무승부" : `${NAME[t.b > t.w ? 1 : 2]} 승리 (${fmt(Math.abs(t.b - t.w))}점 차)`;
+    if (t && window.__hpOnlineEnd) window.__hpOnlineEnd(t.b === t.w ? 0 : ((t.b > t.w ? 1 : 2) === ONLINE.color ? 1 : -1));
     if (t && t.b !== t.w && (t.b > t.w ? 1 : 2) === ONLINE.color && s) launchFireworks();
     renderBar();
   }
@@ -9754,6 +10022,7 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
     sock.emit("sync", { room: ONLINE.room }, res => { if (res && res.ok) replay(res.events); });
   }
   function finishByForfeit(winner, msg) {
+    if (window.__hpOnlineEnd) window.__hpOnlineEnd(winner === ONLINE.color ? 1 : -1);
     if (!isGameOver) { isGameOver = true; selected = -1; layerLock = -1; }
     ONLINE.result = msg;
     showToast(msg, winner === ONLINE.color ? "" : "warn");
@@ -9963,6 +10232,7 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
         <button type="button" class="onl-btn" data-k="share">📤 다시 보내기</button>
         <button type="button" class="onl-btn" data-k="copy">🔗 링크 복사</button>
       </div>
+      <div class="onl-bot" id="onl-bot" hidden><span id="onl-bot-t"></span><button type="button" class="onl-btn ghost" data-k="humanonly">사람만 기다리기</button></div>
       <button type="button" class="onl-btn ghost" data-k="cancel">취소</button>
     </div>
   </div>`;
@@ -9999,13 +10269,36 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
     const srv = modal.querySelector(".onl-server");
     srv.hidden = !!ONLINE_DEFAULT_SERVER || (isApp() && !!appServer());   // 앱에 서버 주소가 정해져 있으면 설정 칸을 숨김
     if (!serverUrl()) srv.open = true;
-    const pv = $("onl-privacy"), pvUrl = PRIVACY_POLICY_URL || (serverUrl() ? serverUrl() + "/privacy" : ""); pv.hidden = !pvUrl; if (pvUrl) pv.href = pvUrl;
+    const pv = $("onl-privacy"), pvUrl = PRIVACY_POLICY_URL || (serverUrl() ? serverUrl() + "/privacy" : ""); pv.hidden = false;
+    if (pvUrl) { pv.href = pvUrl; pv.onclick = null; } else { pv.removeAttribute("href"); pv.setAttribute("role", "button"); pv.tabIndex = 0; pv.onclick = e => { e.preventDefault(); if (window.__hpPrivacy) window.__hpPrivacy(); }; }
     msg(""); renderPicks(); page("lobby");
     modal.hidden = false;
     pollStats();
     if (!window.matchMedia("(pointer: coarse)").matches) setTimeout(() => $("onl-name").focus(), 50);
   }
-  function hideModal() { modal.hidden = true; waitingKind = ""; clearTimeout(statsTimer); }
+  function hideModal() { modal.hidden = true; waitingKind = ""; clearTimeout(statsTimer); disarmBot(); }
+  /* (2026-10 상업화 보강) 랜덤 매칭에서 정해진 시간 안에 사람이 없으면 'AI 연습 상대'와 바로 대국.
+     사람처럼 꾸미지 않고 AI라고 분명히 알림 (레이팅에도 반영하지 않음). '사람만 기다리기'로 끌 수 있음 */
+  let botTick = 0;
+  function disarmBot() { clearInterval(botTick); botTick = 0; const el = $("onl-bot"); if (el) el.hidden = true; }
+  function armBot() {
+    disarmBot();
+    const sec = window.HanokPlus ? +window.HanokPlus.cfg.BOT_FALLBACK_SEC || 0 : 0;
+    if (!sec) return;
+    let left = sec;
+    const el = $("onl-bot"), t = $("onl-bot-t");
+    const upd = () => { t.textContent = `${left}초 안에 상대가 없으면 AI 연습 상대와 시작합니다`; };
+    el.hidden = false; upd();
+    botTick = setInterval(() => {
+      left--;
+      if (left > 0) { upd(); return; }
+      disarmBot();
+      if (waitingKind !== "quick" || ONLINE.inGame) return;
+      if (sock) sock.emit("cancel");
+      const m = pickMode; waitingKind = ""; pending = null; hideModal();
+      if (window.__hpStartBot) window.__hpStartBot(m);
+    }, 1000);
+  }
   /* 로비에 접속 인원 표시 (5초마다) */
   let statsTimer = 0;
   async function pollStats() {
@@ -10017,7 +10310,9 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
         if (!st || modal.hidden) return;
         waitCounts = {};
         Object.entries(st.waiting || {}).forEach(([k, v]) => { waitCounts[/x/.test(k) ? k : `${k}x${k}x${k}`] = +v || 0; });
-        $("onl-stats").textContent = `지금 접속 ${st.online}명 · 대국 중 ${st.playing}명`;
+        /* 접속자가 적을 때 '0명'을 보여 주면 첫인상이 나빠지므로 숫자 대신 안내 (기준: HanokPlus.cfg.SHOW_ONLINE_MIN) */
+        const minShow = window.HanokPlus ? +window.HanokPlus.cfg.SHOW_ONLINE_MIN || 0 : 0;
+        $("onl-stats").textContent = (+st.online || 0) >= minShow ? `지금 접속 ${st.online}명 · 대국 중 ${st.playing}명` : "잠시 기다려도 상대가 없으면 AI 연습 상대와 바로 시작합니다";
         renderPicks();
       });
     } catch (e) { $("onl-stats").textContent = ""; }
@@ -10062,7 +10357,8 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
   }
   async function act(k) {
     if (k === "close") { if (waitingKind && sock) sock.emit("cancel"); pending = null; return hideModal(); }
-    if (k === "cancel") { if (sock) sock.emit("cancel"); waitingKind = ""; pending = null; page("lobby"); msg("취소했습니다."); return; }
+    if (k === "cancel") { disarmBot(); if (sock) sock.emit("cancel"); waitingKind = ""; pending = null; page("lobby"); msg("취소했습니다."); return; }
+    if (k === "humanonly") { disarmBot(); $("onl-wait-text").textContent = "사람 상대를 기다리는 중…"; return; }
     if (k === "copy") { const c = $("onl-code-show").textContent; if (await copyText(inviteLink(c))) showToast("초대 링크를 복사했습니다.", "info"); else showToast(inviteLink(c), "info"); return; }
     if (k === "share") { shareInvite($("onl-code-show").textContent); return; }
     const name = saveForm(), n = MODES[pickMode].n, l = MODES[pickMode].layers, sizes = onlineModes().map(m => MODES[m].n),
@@ -10076,6 +10372,7 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
     }
     if (k === "quick") {
       wait("quick", `${MODES[pickMode].title} 상대를 찾는 중…`);
+      armBot();
       s.emit("quick", { v: 2, n, l, name, komi: MODES[pickMode].komi, pid: myPid() }, res => { if (!res || !res.ok) { page("lobby"); msg((res && res.msg) || "매칭에 실패했습니다.", true); } });
     } else if (k === "invite") {
       wait("invite", "방을 만드는 중…");
@@ -10147,6 +10444,1034 @@ const PRIVACY_POLICY_URL = "";      // 예: "https://내-도메인/privacy" — 
     connect, myName: () => store.get("onlineName", "") };
 })();
 
+/* =====================================================================
+   HANOK PLUS (2026-10 상업화 보강) — 수익화 · 리텐션 · 공유
+   - 기존 게임 함수(startNewGame · undoMove · playMove · recordAIResult · tutorialAfterMove · tapPoint)를
+     ‘감싸기’만 하고 원래 동작은 그대로 둠. 이 블록을 지우면 원래 게임과 똑같이 돌아감.
+   - 광고·결제·Play 게임즈·알림은 웹 코드만으로는 불가능 → window.HanokApp / window.HanokNative의
+     함수가 있을 때만 쓰고, 없으면 해당 버튼을 숨김 (규격: HANOK_PLUS_NATIVE_BRIDGE.md)
+   - 브라우저에서 흐름 시험: 주소 뒤에 ?adtest=1 → 모의 광고·모의 결제
+   ===================================================================== */
+{
+  const HP = {
+    FREE_UNDO_PER_GAME: 1,      // AI 도전: 한 판에 무료 무르기 횟수
+    UNDO_COST: 1,               // 그 뒤 무르기 1회 = 여의주 1개 (또는 보상형 광고)
+    FREE_HINTS_PER_GAME: 1,     // AI 훈수: 무료 이용자 판마다 1회 (멤버십은 무제한)
+    HINT_COST: 2,
+    REWARD_WIN: 3, REWARD_WIN_HARD: 5, REWARD_PLAY: 1,
+    REWARD_DAILY: 3, REWARD_STAGE: 1, STARTER_ORBS: 10,   // 사활: 판마다 오늘의 문제 +3
+    AD_ORBS: 2, AD_ORBS_PER_DAY: 5,   // 상점: 광고 보고 여의주 받기
+    INTERSTITIAL_EVERY: 3,      // 끝난 대국 3판마다 1번 (새 대국을 시작할 때)
+    INTERSTITIAL_MIN_GAMES: 3,  // 처음 3판은 전면 광고 없음
+    BOT_FALLBACK_SEC: 10,       // 웹대국: 이 시간 안에 사람이 없으면 AI 연습 상대 (0 = 끔)
+    SHOW_ONLINE_MIN: 20,        // 접속자 수가 이보다 적으면 숫자를 보여 주지 않음
+    STORE_URL: "",              // 구글 플레이 등록 후 예: "https://play.google.com/store/apps/details?id=패키지명"
+    SKU_REMOVE_ADS: "remove_ads",
+    STAGES: 100,
+    /* 멤버십 (프리미엄 구독 · 교구/기관 코드) */
+    SKU_SUB_MONTH: "premium_monthly", SKU_SUB_YEAR: "premium_yearly",   // Play Console의 구독 상품 ID와 같게
+    /* 멤버십 코드 검증용 '공개' 키 (공개돼도 안전 — 코드를 만드는 개인 키는 운영자 PC의 license-tool에만 있음) */
+    LICENSE_PUBLIC_JWK: { kty: "EC", crv: "P-256", x: "AlOnPYqq8ErEJBvF-PjQf0ycyLPDME12L-oZKT_viog", y: "37aPJ5SMiGlHSAWxi0K_PLm4pbmMe0v962yj4erz3E0" },
+    /* 급수·단증 신청 */
+    CERT_MIN_RANK: 6,           // 등급 단계 6 이상 = 3×3×3 5급 · 3×5×5 5부 · 2×7×7 5단
+    CERT_EMAIL: "",             // 신청서를 받을 이메일 (비어 있으면 '복사'만)
+    CERT_LABEL: "🎓 급수·단증 발급 안내",  // '공인'은 국가공인 민간자격으로 인정받은 뒤에만 쓰세요
+    /* 개인정보처리방침: 앱 안에 내장(인터넷 없어도 열림). 웹 주소가 있으면 '웹에서 보기'도 표시 */
+    PRIVACY: { operator: "[운영자 이름/상호]", email: "[이메일 주소]", since: "2026년 ○월 ○일", server: "[서버 회사/국가]", url: "" }
+  };
+  const HP_TEST = /[?&]adtest=1\b/.test(location.search);
+  const $h = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  const todayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const yesterdayStr = () => { const d = new Date(); d.setDate(d.getDate() - 1); return todayStr(d); };
+  const PZ_BOARDS = ["jamyong", "m355", "m277"];   // 사활은 세 판마다 따로 (오늘의 문제 + 연습 100문제)
+  const curLang = () => (window.HanokI18n && window.HanokI18n.get) ? window.HanokI18n.get() : "ko";
+
+  /* ---------------- 저장 (여의주·스킨·사활 진행) ---------------- */
+  const ECO_DEF = () => ({ orbs: HP.STARTER_ORBS, adFree: false, skins: ["classic"], skin: "classic", day: "", hints: 0, adOrbs: 0,
+    games: 0, sinceAd: 0, wins: 0, pz: { v: 2, last: "", streak: 0, b: {} } });
+  function eco() {
+    const e = Object.assign(ECO_DEF(), store.get("eco", null) || {});
+    if (!e.pz || typeof e.pz !== "object" || e.pz.v !== 2) e.pz = ECO_DEF().pz;   // 판별 사활 기록 (v2)
+    PZ_BOARDS.forEach(m => { const x = e.pz.b[m] = e.pz.b[m] || {}; x.daily = x.daily || {}; x.solved = x.solved || []; x.next = x.next || 1; });
+    const d = todayStr();
+    if (e.day !== d) { e.day = d; e.hints = 0; e.adOrbs = 0; }
+    return e;
+  }
+  const saveEco = e => { store.set("eco", e); renderOrbs(); };
+  const addOrbs = (n, why) => { const e = eco(); e.orbs = Math.max(0, e.orbs + n); saveEco(e); if (n > 0) pop(`여의주 +${n}`, why); };
+
+  /* ---------------- 앱 연결 (광고·결제·Play 게임즈) ---------------- */
+  const Bridge = (() => {
+    const A = () => window.HanokApp || {}, NV = () => window.HanokNative;
+    let seq = 0;
+    /* 안드로이드 @JavascriptInterface는 Promise를 못 돌려주므로: 마지막 인자로 콜백 이름 → 앱이 window[이름](결과) 호출 */
+    function viaNative(m, args, wait) {
+      return new Promise(res => {
+        const name = "__hpCb" + (++seq);
+        const t = setTimeout(() => { delete window[name]; res(null); }, wait || 120000);
+        window[name] = v => { clearTimeout(t); delete window[name]; let r = v; try { if (typeof v === "string") r = JSON.parse(v); } catch (e) {} res(r); };
+        try { NV()[m](...args, name); } catch (e) { clearTimeout(t); delete window[name]; res(null); }
+      });
+    }
+    const has = m => typeof A()[m] === "function" || !!(NV() && typeof NV()[m] === "function");
+    function call(m, ...args) {
+      if (typeof A()[m] === "function") { try { return Promise.resolve(A()[m](...args)).catch(() => null); } catch (e) { return Promise.resolve(null); } }
+      if (NV() && typeof NV()[m] === "function") return viaNative(m, args);
+      return Promise.resolve(null);
+    }
+    function fire(m, ...args) {                       // 결과를 기다리지 않는 호출 (점수 올리기·업적)
+      try { if (typeof A()[m] === "function") A()[m](...args); else if (NV() && typeof NV()[m] === "function") NV()[m](...args); } catch (e) {}
+    }
+    return { has, call, fire };
+  })();
+
+  /* ---------------- 광고 ---------------- */
+  const adEl = document.createElement("div");
+  adEl.id = "hp-ad"; adEl.setAttribute("role", "dialog"); adEl.setAttribute("aria-modal", "true");
+  adEl.innerHTML = `<div class="hp-ad-card"><b id="hp-ad-title">광고를 불러오는 중…</b><span id="hp-ad-sub"></span><button type="button" class="hp-btn ghost" id="hp-ad-close" hidden>닫기</button></div>`;
+  document.body.appendChild(adEl);
+  function fakeAd(sec, rewarded) {                    // ?adtest=1 : 브라우저에서 흐름만 시험하는 모의 광고
+    return new Promise(res => {
+      let left = sec, done = false;
+      const t = $h("hp-ad-title"), s = $h("hp-ad-sub"), c = $h("hp-ad-close");
+      t.textContent = "테스트 광고 (실제 광고 아님)";
+      c.hidden = false; c.textContent = rewarded ? "건너뛰기 (보상 없음)" : "닫기";
+      const tick = () => { s.textContent = left > 0 ? `${left}초` : "보상 받기 완료"; };
+      tick();
+      const iv = setInterval(() => { left--; tick(); if (left <= 0) { clearInterval(iv); c.textContent = "닫기"; } }, 1000);
+      c.onclick = () => { if (done) return; done = true; clearInterval(iv); res(left <= 0); };
+    });
+  }
+  const Ads = {
+    rewardedOK: () => HP_TEST || Bridge.has("showRewardedAd"),
+    interstitialOK: () => HP_TEST || Bridge.has("showInterstitial"),
+    async run(kind, placement) {
+      if (adEl.classList.contains("show")) return false;
+      $h("hp-ad-title").textContent = "광고를 불러오는 중…"; $h("hp-ad-sub").textContent = ""; $h("hp-ad-close").hidden = true;
+      adEl.classList.add("show");                      // 이 창이 떠 있는 동안 대국 시계 멈춤
+      let ok = false;
+      try {
+        if (HP_TEST) ok = await fakeAd(kind === "rewarded" ? 5 : 3, kind === "rewarded");
+        else {
+          const r = await Bridge.call(kind === "rewarded" ? "showRewardedAd" : "showInterstitial", placement);
+          ok = r === true || !!(r && (r.rewarded || r.ok));
+        }
+      } finally { adEl.classList.remove("show"); }
+      if (kind === "rewarded" && !ok) showToast("광고를 끝까지 보지 않아 보상이 지급되지 않았습니다.", "warn");
+      return ok;
+    }
+  };
+
+  /* ---------------- 공용 창 (시트) ---------------- */
+  const sheet = document.createElement("div");
+  sheet.id = "hp-sheet"; sheet.setAttribute("role", "dialog"); sheet.setAttribute("aria-modal", "true");
+  sheet.innerHTML = `<div class="hp-card"><button type="button" class="hp-x" data-hp="close" aria-label="닫기">✕</button><div class="hp-body" id="hp-body"></div></div>`;
+  document.body.appendChild(sheet);
+  let sheetHandler = null;
+  function openSheet(html, handler) {
+    $h("hp-body").innerHTML = html; sheetHandler = handler || null;
+    sheet.classList.add("show");
+    setTimeout(() => { const f = sheet.querySelector(".hp-body .hp-btn:not([disabled])"); if (f && !COARSE_PTR) f.focus({ preventScroll: true }); }, 40);
+  }
+  function closeSheet() { if (!sheet.classList.contains("show")) return false; sheet.classList.remove("show"); sheetHandler = null; return true; }
+  window.__hpCloseSheet = () => closeSheet() || (adEl.classList.contains("show"));
+  sheet.addEventListener("click", e => {
+    if (e.target === sheet) return closeSheet();
+    const b = e.target.closest("[data-hp]"); if (!b || b.disabled) return;
+    if (b.dataset.hp === "close") return closeSheet();
+    if (sheetHandler) sheetHandler(b.dataset.hp, b);
+  });
+  window.addEventListener("keydown", e => {
+    if (!sheet.classList.contains("show") && !adEl.classList.contains("show")) return;
+    if (e.target && e.target.closest && e.target.closest("#hp-sheet textarea, #hp-sheet input")) { if (e.key === "Escape") closeSheet(); return; }
+    e.stopPropagation();
+    if (e.key === "Escape") closeSheet();
+  }, true);
+
+  /* 작은 알림 (기존 알림 줄과 겹치지 않게 화면 위쪽에 잠깐) */
+  const popEl = document.createElement("div"); popEl.id = "hp-pop"; popEl.setAttribute("role", "status"); document.body.appendChild(popEl);
+  let popT = 0;
+  function pop(text) { popEl.textContent = text; popEl.classList.remove("show"); void popEl.offsetWidth; popEl.classList.add("show"); clearTimeout(popT); popT = setTimeout(() => popEl.classList.remove("show"), 2600); }
+
+  /* ---------------- 대국 번호 · 무르기 제한 ---------------- */
+  let gameSerial = 0, undoFree = HP.FREE_UNDO_PER_GAME, hintFree = HP.FREE_HINTS_PER_GAME, countedSerial = -1, hintIdx = -1;
+  const _startNewGame = startNewGame;
+  startNewGame = function (quiet) {
+    gameSerial++; undoFree = HP.FREE_UNDO_PER_GAME; hintFree = HP.FREE_HINTS_PER_GAME; hintIdx = -1;
+    tutHints = [];                                     // (튜토리얼·사활은 불러온 뒤 다시 채움)
+    const r = _startNewGame(quiet);
+    maybeInterstitial();
+    renderHintBtn();
+    return r;
+  };
+  const undoGated = () => vsAI && !ONLINE.inGame && !tutorial && historyStack.length > 0 && !isMember();   // 멤버십: 무르기 무제한
+  const _undoMove = undoMove;
+  const clearHint = () => { if (hintIdx >= 0 && !tutorial) { hintIdx = -1; tutHints = []; } };
+  const doUndo = () => { clearHint(); const r = _undoMove(); renderHintBtn(); return r; };
+  undoMove = function () {
+    if (!undoGated()) return doUndo();
+    if (undoFree > 0) { undoFree--; return doUndo(); }
+    openUndoSheet();
+  };
+  function openUndoSheet() {
+    const e = eco(), can = e.orbs >= HP.UNDO_COST, ad = Ads.rewardedOK();
+    openSheet(`<h3>↩️ 무르기</h3>
+      <p class="hp-p">AI 도전에서는 한 판에 무료 무르기가 정해져 있습니다. 이번 판의 무료 무르기를 모두 썼습니다.</p>
+      <div class="hp-orbline"><span class="hp-gem" aria-hidden="true"></span><span>보유 여의주</span><b>${e.orbs}</b></div>
+      <div class="hp-acts">
+        ${ad ? `<button type="button" class="hp-btn ad" data-hp="ad">🎬 광고 보고 무르기</button>` : ""}
+        <button type="button" class="hp-btn" data-hp="orb"${can ? "" : " disabled"}>💎 여의주 ${HP.UNDO_COST}개로 무르기</button>
+        <button type="button" class="hp-btn ghost" data-hp="close">취소</button>
+      </div>
+      ${can || ad ? "" : `<p class="hp-note">여의주는 AI 도전 승리, 오늘의 공간사활로 모을 수 있습니다.</p>`}`,
+    async k => {
+      if (k === "orb") { const x = eco(); if (x.orbs < HP.UNDO_COST) return; x.orbs -= HP.UNDO_COST; saveEco(x); closeSheet(); doUndo(); }
+      else if (k === "ad") { closeSheet(); if (await Ads.run("rewarded", "undo")) doUndo(); }
+    });
+  }
+
+  /* ---------------- AI 훈수 (추천 수) ---------------- */
+  let hintBusy = false;
+  const hintFreeLeft = () => isMember() ? Infinity : Math.max(0, hintFree);
+  function renderHintBtn() {
+    const b = $h("btn-hint"); if (!b) return;
+    const c = b.querySelector(".hp-cnt"); const left = hintFreeLeft();
+    if (c) { c.textContent = left === Infinity ? "∞" : left > 0 ? String(left) : "💎"; c.classList.toggle("paid", left <= 0); c.classList.toggle("vip", left === Infinity); }
+    b.classList.toggle("busy", hintBusy); b.classList.toggle("on", hintIdx >= 0);
+  }
+  function hintBlocked() {
+    if (!vsAI || ONLINE.inGame || tutorial) return "훈수는 AI 도전 중에만 쓸 수 있습니다.";
+    if (review) return "복기를 끝낸 뒤 훈수를 받을 수 있습니다.";
+    if (isGameOver || countPreview) return "대국이 끝나 훈수를 받을 수 없습니다.";
+    if (currentTurn === AI_COLOR || aiThinking) return "내 차례에 훈수를 받을 수 있습니다.";
+    if (hintBusy) return "AI가 추천 수를 찾는 중입니다.";
+    return "";
+  }
+  async function requestHint() {
+    const why = hintBlocked(); if (why) { playSound("error"); showToast(why, "info"); return; }
+    if (hintIdx >= 0) { showToast(`AI 추천 수: ${pointLabel(hintIdx)} (노란 점) · 한 번 더 누르면 착수`, "info"); return; }
+    if (isMember()) return runHint();
+    if (hintFreeLeft() > 0) { hintFree--; return runHint(); }
+    const e = eco(), can = e.orbs >= HP.HINT_COST, ad = Ads.rewardedOK();
+    openSheet(`<h3>💡 AI 훈수</h3>
+      <p class="hp-p">고급 AI가 지금 판에서 가장 좋다고 보는 수를 노란 점으로 알려 줍니다. 이번 판의 무료 훈수를 썼습니다 (판마다 ${HP.FREE_HINTS_PER_GAME}번 무료).</p>
+      <button type="button" class="hp-btn vip wide" data-hp="member">⭐ 멤버십이면 훈수·무르기 무제한</button>
+      <div class="hp-orbline"><span class="hp-gem" aria-hidden="true"></span><span>보유 여의주</span><b>${e.orbs}</b></div>
+      <div class="hp-acts">
+        ${ad ? `<button type="button" class="hp-btn ad" data-hp="ad">🎬 광고 보고 훈수 받기</button>` : ""}
+        <button type="button" class="hp-btn" data-hp="orb"${can ? "" : " disabled"}>💎 여의주 ${HP.HINT_COST}개로 훈수 받기</button>
+        <button type="button" class="hp-btn ghost" data-hp="close">취소</button>
+      </div>`,
+    async k => {
+      if (k === "orb") { const x = eco(); if (x.orbs < HP.HINT_COST) return; x.orbs -= HP.HINT_COST; saveEco(x); closeSheet(); runHint(); }
+      else if (k === "ad") { closeSheet(); if (await Ads.run("rewarded", "hint")) runHint(); }
+      else if (k === "member") openPass();
+    });
+  }
+  async function runHint() {
+    if (hintBlocked()) return;
+    hintBusy = true; renderHintBtn();
+    showToast("AI가 추천 수를 찾는 중…", "info");
+    const mv = moveNumber, color = currentTurn, serial = gameSerial;
+    const req = { n: N, l: NL, board: Array.from(board), color, level: 2, seen: [...seenPositions], komi, algo: AI_ALGO(N), maxDepth: AI_DEPTH(N) };
+    let r = null;
+    try { r = await aiCall("move", req); } catch (e) { r = null; }
+    hintBusy = false;
+    if (serial !== gameSerial || moveNumber !== mv || isGameOver || currentTurn !== color) { renderHintBtn(); return; }
+    if (!r || r.index < 0 || !isLegal(r.index, color)) { renderHintBtn(); showToast("지금은 둘 만한 자리가 마땅치 않습니다. 패스도 생각해 보세요.", "info"); return; }
+    hintIdx = r.index; tutHints = [r.index];
+    selected = r.index; layerLock = coord(r.index).y; currentLayer = layerLock;   // 미리보기 돌 + 세 방향 빛줄기로 3D 큐브 위에 표시
+    renderHintBtn(); updateUI();
+    playSound("select");
+    if (sceneManager && sceneManager.celebrate && !REDUCED) sceneManager.celebrate(3);
+    showToast(`AI 추천 수: ${pointLabel(r.index)} (노란 점) · 한 번 더 누르면 착수`, "info");
+  }
+  const _playMove = playMove;
+  playMove = function (index) {
+    const before = moveNumber;
+    const r = _playMove(index);
+    if (moveNumber !== before) { clearHint(); renderHintBtn(); }
+    return r;
+  };
+
+  /* ---------------- 전면 광고 (자연스러운 쉬는 때: 새 대국을 시작할 때만) ---------------- */
+  function maybeInterstitial() {
+    const e = eco();
+    if (e.adFree || isMember() || !Ads.interstitialOK() || e.games < HP.INTERSTITIAL_MIN_GAMES || e.sinceAd < HP.INTERSTITIAL_EVERY) return;
+    setTimeout(() => {
+      const b = document.body;
+      if (b.classList.contains("intro-open") || ONLINE.inGame || tutorial || moveNumber !== 0 || isGameOver || adEl.classList.contains("show")) return;
+      const x = eco(); if (x.sinceAd < HP.INTERSTITIAL_EVERY) return;
+      x.sinceAd = 0; saveEco(x);
+      Ads.run("interstitial", "new_game");
+    }, 700);
+  }
+
+  /* ---------------- 대국 결과: 여의주 · Play 게임즈 · 공유 ---------------- */
+  function countGame(won, kind) {
+    if (countedSerial === gameSerial) return false;
+    countedSerial = gameSerial;
+    const e = eco(); e.games++; e.sinceAd++; if (won) e.wins++; saveEco(e);
+    if (won && e.wins === 1) Bridge.fire("unlockAchievement", "first_win");
+    return true;
+  }
+  const _recordAIResult = recordAIResult;
+  recordAIResult = function () {
+    _recordAIResult();
+    if (!vsAI || !lastRecord || tutorial || ONLINE.inGame) return;
+    const rec = lastRecord, won = rec.outcome === "w";
+    if (!countGame(won, "ai")) return;
+    addOrbs(won ? (rec.hard ? HP.REWARD_WIN_HARD : HP.REWARD_WIN) : HP.REWARD_PLAY);
+    const r = getRecord(rec.mode);
+    Bridge.fire("submitScore", "board_" + modeStoreKey(rec.mode), r.hw);
+    if (won && rec.hard) Bridge.fire("unlockAchievement", "first_hard_win");
+    if (won && rec.hard && r.hw > 0 && r.hw % WINS_PER_RANK === 0) Bridge.fire("unlockAchievement", "rank_" + modeStoreKey(rec.mode) + "_" + rankIndex(r.hw));
+    if (won) setTimeout(() => showWinBar({ kind: "ai", mode: rec.mode, level: aiLevel, rank: rankName(rec.mode, r.hw), hard: rec.hard }), 1400);
+  };
+  window.__hpOnlineEnd = res => {                       // 웹대국이 끝나면 온라인 코드가 부름 (1 승 · 0 무 · -1 패)
+    if (!countGame(res > 0, "online")) return;
+    addOrbs(res > 0 ? HP.REWARD_WIN : HP.REWARD_PLAY);
+    if (res > 0) setTimeout(() => showWinBar({ kind: "online", mode }), 1400);
+  };
+
+  /* ---------------- 승리 공유 카드 ---------------- */
+  const winBar = document.createElement("div");
+  winBar.id = "hp-winbar"; winBar.setAttribute("role", "status");
+  winBar.innerHTML = `<span class="hp-wb-t" id="hp-wb-t">🎉 승리! 친구에게 자랑해 보세요</span><button type="button" class="hp-btn sm" id="hp-wb-share">📤 자랑하기</button><button type="button" class="hp-wb-x" id="hp-wb-x" aria-label="닫기">✕</button>`;
+  document.body.appendChild(winBar);
+  let winInfo = null, winT = 0;
+  function showWinBar(info) {
+    winInfo = info; $h("hp-wb-t").textContent = info.kind === "puzzle" ? "🎉 정답! 친구에게 자랑해 보세요" : "🎉 승리! 친구에게 자랑해 보세요";
+    winBar.classList.add("show"); clearTimeout(winT);
+    winT = setTimeout(() => winBar.classList.remove("show"), 15000);
+  }
+  $h("hp-wb-x").addEventListener("click", () => winBar.classList.remove("show"));
+  $h("hp-wb-share").addEventListener("click", () => { winBar.classList.remove("show"); if (winInfo) openShare(winInfo); });
+
+  const LV = { ko: ["초급", "중급", "고급"], en: ["Beginner", "Intermediate", "Advanced"], ja: ["初級", "中級", "上級"], zh: ["初级", "中级", "高级"],
+    ru: ["новичок", "средний", "сильный"], fr: ["débutant", "intermédiaire", "avancé"], de: ["Anfänger", "Mittel", "Fortgeschritten"] };
+  const SHARE_TX = {
+    ko: { ai: (b, l, r) => `3D 공간바둑 ${b}에서 AI ${l}을 꺾었다!${r ? ` (현재 ${r})` : ""}`, online: b => `3D 공간바둑 ${b} 웹대국에서 이겼다!`,
+          puzzle: s => `오늘의 공간사활 해결! 연속 ${s}일째`, cta: "너도 도전해 봐 👉", sub: "가로·세로·높이, 여섯 방향으로 이어지는 바둑" },
+    en: { ai: (b, l) => `I beat the ${l} AI in 3D Space Go (${b})!`, online: b => `I won an online match of 3D Space Go (${b})!`,
+          puzzle: s => `Solved today’s Space Go puzzle! ${s}-day streak`, cta: "Your turn 👉", sub: "Go in six directions: across, along and up" },
+    ja: { ai: (b, l) => `立体囲碁 ${b} で AI ${l} に勝った！`, online: b => `立体囲碁 ${b} のオンライン対局で勝った！`,
+          puzzle: s => `今日の空間詰碁をクリア！${s}日連続`, cta: "君も挑戦してみて 👉", sub: "縦・横・高さ、六方向につながる囲碁" },
+    zh: { ai: (b, l) => `我在3D空间围棋 ${b} 中战胜了${l} AI！`, online: b => `我在3D空间围棋 ${b} 网络对弈中获胜！`,
+          puzzle: s => `解开了今日空间死活题！连续 ${s} 天`, cta: "你也来挑战吧 👉", sub: "长、宽、高，六个方向相连的围棋" },
+    ru: { ai: (b, l) => `Я обыграл ИИ (${l}) в 3D-го ${b}!`, online: b => `Я выиграл онлайн-партию в 3D-го ${b}!`,
+          puzzle: s => `Решил задачу дня в пространственном го! ${s} дн. подряд`, cta: "Попробуй и ты 👉", sub: "Го в шести направлениях" },
+    fr: { ai: (b, l) => `J’ai battu l’IA (${l}) au go spatial 3D ${b} !`, online: b => `J’ai gagné une partie en ligne de go spatial 3D ${b} !`,
+          puzzle: s => `Problème du jour résolu ! ${s} jours d’affilée`, cta: "À toi de jouer 👉", sub: "Le go dans six directions" },
+    de: { ai: (b, l) => `Ich habe die KI (${l}) im 3D-Space-Go ${b} besiegt!`, online: b => `Ich habe eine Online-Partie 3D-Space-Go ${b} gewonnen!`,
+          puzzle: s => `Tagesaufgabe gelöst! ${s} Tage in Folge`, cta: "Jetzt du 👉", sub: "Go in sechs Richtungen" }
+  };
+  function shareLink() {
+    if (HP.STORE_URL) return HP.STORE_URL;
+    if (/^https:$/.test(location.protocol)) { try { return new URL("./", location.href).href; } catch (e) {} }
+    return "";
+  }
+  function shareHeadline(info) {
+    const L = SHARE_TX[curLang()] || SHARE_TX.ko, lv = (LV[curLang()] || LV.ko)[info.level || 0];
+    const b = MODES[info.mode] ? MODES[info.mode].title : "";
+    if (info.kind === "puzzle") return L.puzzle(info.streak || 1);
+    if (info.kind === "online") return L.online(b);
+    return L.ai(b, lv, curLang() === "ko" && info.hard ? info.rank : "");
+  }
+  function shareText(info) {
+    const L = SHARE_TX[curLang()] || SHARE_TX.ko, link = shareLink();
+    return `${shareHeadline(info)} 🏆\nHANOK3D GO · ${L.sub}\n${L.cta}${link ? " " + link : ""}`;
+  }
+  const loadImg = src => new Promise(res => { if (!src) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+  function wrapText(ctx, text, maxW) {
+    const words = text.split(/(\s+)/), lines = []; let cur = "";
+    const pushChars = w => { for (const ch of w) { if (ctx.measureText(cur + ch).width > maxW && cur) { lines.push(cur); cur = ch; } else cur += ch; } };
+    for (const w of words) { if (ctx.measureText(cur + w).width <= maxW) cur += w; else if (ctx.measureText(w).width > maxW) pushChars(w); else { lines.push(cur.trimEnd()); cur = w.trimStart(); } }
+    if (cur.trim()) lines.push(cur.trim());
+    return lines;
+  }
+  async function makeCard(info) {
+    const W = 1080, H = 1080, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+    const c = cv.getContext("2d");
+    const theme = { wood: ["#4a2f12", "#140b04"], navy: ["#163066", "#060d20"], felt: ["#1d5236", "#06150d"] }[MODES[info.mode] ? MODES[info.mode].theme : "wood"] || ["#4a2f12", "#140b04"];
+    const g = c.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.5, W * 0.75); g.addColorStop(0, theme[0]); g.addColorStop(1, theme[1]);
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.strokeStyle = "rgba(253, 230, 138, 0.55)"; c.lineWidth = 6; c.strokeRect(24, 24, W - 48, H - 48);
+    const FONT = "'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', 'Hiragino Sans', 'Microsoft YaHei', sans-serif";
+    /* 3D 장면 */
+    let shot = "";
+    try { if (sceneManager && sceneManager.capture) shot = sceneManager.capture(); } catch (e) {}
+    const im = await loadImg(shot);
+    if (im) {
+      /* 세로로 긴 게임 화면에서 큐브가 있는 가운데를 크게: 상자에 맞추되 위아래는 조금 잘라 냄 */
+      const bx = 60, by = 190, bw = W - 120, bh = 600, k = Math.min(bw / im.width, (bh / im.height) * 1.45);
+      const dw = im.width * k, dh = im.height * k;
+      c.save(); c.beginPath(); c.rect(bx, by, bw, bh); c.clip();
+      c.drawImage(im, bx + (bw - dw) / 2, by + (bh - dh) / 2, dw, dh);
+      c.restore();
+    }
+    /* 로고 */
+    let logo = null;
+    try { const v = getComputedStyle(document.documentElement).getPropertyValue("--logo"); const m = /url\((['"]?)(.*?)\1\)/.exec(v); if (m) logo = await loadImg(m[2]); } catch (e) {}
+    if (logo) { const lh = 120, lw = logo.width * lh / logo.height; c.drawImage(logo, (W - lw) / 2, 50, lw, lh); }
+    else { c.fillStyle = "#fde68a"; c.font = `900 64px ${FONT}`; c.textAlign = "center"; c.fillText("HANOK3D GO", W / 2, 130); }
+    /* 문구 */
+    c.textAlign = "center"; c.textBaseline = "alphabetic";
+    c.font = `900 54px ${FONT}`;
+    const lines = wrapText(c, shareHeadline(info), W - 140).slice(0, 2);
+    const L = SHARE_TX[curLang()] || SHARE_TX.ko;
+    c.fillStyle = "rgba(0,0,0,0.45)"; c.fillRect(40, 812, W - 80, 228);
+    c.fillStyle = "#fff4cf"; lines.forEach((ln, i) => c.fillText(ln, W / 2, 880 + i * 66));
+    c.font = `700 34px ${FONT}`; c.fillStyle = "#fde68a";
+    const link = shareLink().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    c.fillText(`${L.cta} ${link || "HANOK3D GO"}`, W / 2, 880 + lines.length * 66 + 20);
+    return cv.toDataURL("image/jpeg", 0.9);
+  }
+  async function openShare(info) {
+    openSheet(`<h3>📤 자랑하기</h3><div class="hp-shot" id="hp-shot"><span>카드를 만드는 중…</span></div>
+      <div class="hp-acts"><button type="button" class="hp-btn" data-hp="share">📤 공유하기</button><button type="button" class="hp-btn ghost" data-hp="copy">🔗 글 복사</button></div>`,
+      async k => {
+        if (k === "copy") { if (await copyTxt(shareText(info))) showToast("공유 글을 복사했습니다. 카카오톡이나 SNS에 붙여 넣으세요.", "info"); }
+        else if (k === "share") doShare(info, card);
+      });
+    let card = "";
+    try { card = await makeCard(info); } catch (e) { card = ""; }
+    const box = $h("hp-shot"); if (box) box.innerHTML = card ? `<img src="${card}" alt="공유 카드">` : `<span>이 기기에서는 화면을 캡처하지 못해 글만 공유합니다.</span>`;
+  }
+  async function copyTxt(t) {
+    try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+    try { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; }
+  }
+  async function doShare(info, card) {
+    const text = shareText(info);
+    try {
+      if (card && Bridge.has("shareImage")) { Bridge.call("shareImage", card.split(",")[1], text); return; }      // 앱: 이미지+글 공유 창
+      if (card && navigator.canShare) {
+        const blob = await (await fetch(card)).blob(), file = new File([blob], "hanok3d-go.jpg", { type: "image/jpeg" });
+        if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text, title: "HANOK3D GO" }); return; }
+      }
+      if (window.HanokApp && window.HanokApp.share) { window.HanokApp.share(text); return; }
+      if (navigator.share) { await navigator.share({ title: "HANOK3D GO", text }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    if (await copyTxt(text)) showToast("공유 글을 복사했습니다. 카카오톡이나 SNS에 붙여 넣으세요.", "info");
+  }
+  /* 결과 창(시간승 등)에도 공유 버튼 */
+  (() => {
+    const acts = document.querySelector("#result-modal .res-actions"); if (!acts) return;
+    const b = document.createElement("button"); b.type = "button"; b.className = "btn hp-res-share"; b.id = "res-share"; b.textContent = "📤 결과 자랑하기";
+    acts.appendChild(b);
+    b.addEventListener("click", () => {
+      const t = scoreTotals(); const me = ONLINE.inGame ? ONLINE.color : 1;
+      const w = timeLoser ? 3 - timeLoser : (t ? (t.b > t.w ? 1 : t.w > t.b ? 2 : 0) : 0);
+      if (w !== me || !(vsAI || ONLINE.inGame)) { showToast("이긴 대국(AI 도전·웹대국)만 자랑할 수 있습니다.", "info"); return; }
+      const r = getRecord(mode);
+      openShare(ONLINE.inGame ? { kind: "online", mode } : { kind: "ai", mode, level: aiLevel, rank: rankName(mode, r.hw), hard: aiLevel === 2 });
+    });
+  })();
+
+  /* ---------------- 돌 스킨 ---------------- */
+  const SKINS = [
+    { id: "classic", name: "기본 무광", price: 0, sw: ["#1b1e1c", "#c2b9a2"] },
+    { id: "jade", name: "옥돌", price: 30, sw: ["#0d2b21", "#b9d6c1"],
+      1: { color: 0x0d2b21, roughness: 0.32, metalness: 0, clearcoat: 0.8, clearcoatRoughness: 0.18, ghost: 0x1f5a44 },
+      2: { color: 0xb9d6c1, roughness: 0.3, metalness: 0, clearcoat: 0.85, clearcoatRoughness: 0.15, ghost: 0xd6eadc } },
+    { id: "pearl", name: "자개", price: 50, sw: ["#141822", "#e2e4ee"],
+      1: { color: 0x141822, roughness: 0.22, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.08, ghost: 0x2c3448 },
+      2: { color: 0xe2e4ee, roughness: 0.18, metalness: 0.15, clearcoat: 1, clearcoatRoughness: 0.06, ghost: 0xf2f3fa } },
+    { id: "gold", name: "흑요석 · 황금돌", price: 80, sw: ["#0c0a08", "#d4a73c"],
+      1: { color: 0x0c0a08, roughness: 0.18, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.05, ghost: 0x2a241a },
+      2: { color: 0xe6bc52, roughness: 0.34, metalness: 0.3, clearcoat: 0.7, clearcoatRoughness: 0.15, ghost: 0xf0cf72 } }   // 환경맵이 없어 금속감을 높이면 어두워짐 → 0.3
+  ];
+  function applySkin() {
+    const e = eco(), sk = SKINS.find(s => s.id === e.skin) || SKINS[0];
+    if (sceneManager && sceneManager.setStoneSkin) sceneManager.setStoneSkin(sk.id === "classic" ? null : sk);
+  }
+  window.__hpAfterBoot = () => {
+    applySkin(); restorePurchases(); revalidateMember(); renderMemberBadge();
+    const m = /[?&]pass=([^&#]+)/.exec(location.search);   // 교구 상자 QR: …/game.html?pass=코드
+    if (m) { let code = ""; try { code = decodeURIComponent(m[1]); } catch (e) {} setTimeout(() => openPass(code, true), 900); }
+  };
+
+  /* ---------------- 상점 ---------------- */
+  function renderOrbs() {
+    const e = store.get("eco", null), n = e ? e.orbs : HP.STARTER_ORBS;
+    document.querySelectorAll(".hp-orb-badge").forEach(el => { el.textContent = String(n); });
+    const pd = document.querySelector('.mi[data-hp="puzzle"] .hp-dot');
+    if (pd) pd.hidden = !!(e && e.pz && e.pz.last === todayStr());   // 오늘 한 판이라도 풀었으면 빨간 점 끔
+  }
+  async function restorePurchases() {
+    if (!Bridge.has("restorePurchases")) return;
+    const r = await Bridge.call("restorePurchases");
+    const list = Array.isArray(r) ? r : (r && Array.isArray(r.skus) ? r.skus : []);
+    if (list.includes(HP.SKU_REMOVE_ADS)) { const e = eco(); if (!e.adFree) { e.adFree = true; saveEco(e); } }
+  }
+  const payOK = () => HP_TEST || Bridge.has("purchase");
+  async function buyRemoveAds() {
+    let ok = false;
+    if (HP_TEST) ok = await askConfirm("테스트 결제입니다 (실제 결제 아님). 광고 제거를 적용할까요?", "적용");
+    else { const r = await Bridge.call("purchase", HP.SKU_REMOVE_ADS); ok = r === true || !!(r && r.ok); }
+    if (ok) { const e = eco(); e.adFree = true; saveEco(e); showToast("광고 제거가 적용되었습니다. 고맙습니다!", ""); Bridge.fire("unlockAchievement", "supporter"); }
+    else showToast("결제가 완료되지 않았습니다.", "warn");
+    openShop();
+  }
+  async function openShop() {
+    const e = eco();
+    const skins = SKINS.map(s => {
+      const own = e.skins.includes(s.id), on = e.skin === s.id;
+      const btn = on ? `<button type="button" class="hp-btn sm" disabled>사용 중</button>`
+        : own ? `<button type="button" class="hp-btn sm" data-hp="use:${s.id}">사용</button>`
+        : `<button type="button" class="hp-btn sm" data-hp="buy:${s.id}"${e.orbs >= s.price ? "" : " disabled"}>💎 ${s.price}</button>`;
+      return `<div class="hp-skin${on ? " on" : ""}"><span class="hp-sw" style="--a:${s.sw[0]};--b:${s.sw[1]}"></span><span class="hp-skin-n">${esc(s.name)}</span>${btn}</div>`;
+    }).join("");
+    let price = "";
+    if (!HP_TEST && !e.adFree && Bridge.has("getProducts")) {
+      const r = await Bridge.call("getProducts", [HP.SKU_REMOVE_ADS]); const p = Array.isArray(r) ? r.find(x => x && x.sku === HP.SKU_REMOVE_ADS) : null;
+      if (p && p.price) price = ` · ${esc(p.price)}`;
+    }
+    const adLeft = HP.AD_ORBS_PER_DAY - e.adOrbs;
+    openSheet(`<h3>💎 여의주 상점</h3>
+      <div class="hp-orbline big"><span class="hp-gem" aria-hidden="true"></span><span>보유 여의주</span><b>${e.orbs}</b></div>
+      <p class="hp-note">모으는 법: AI 도전 승리 +${HP.REWARD_WIN} (고급 +${HP.REWARD_WIN_HARD}) · 대국 완료 +${HP.REWARD_PLAY} · 오늘의 공간사활 +${HP.REWARD_DAILY}</p>
+      ${Ads.rewardedOK() ? `<button type="button" class="hp-btn ad wide" data-hp="adorb"${adLeft > 0 ? "" : " disabled"}>🎬 광고 보고 여의주 +${HP.AD_ORBS} (오늘 ${Math.max(0, adLeft)}번 남음)</button>` : ""}
+      <h4>돌 스킨</h4><div class="hp-skins">${skins}</div>
+      ${payOK() ? `<h4>광고</h4>${e.adFree ? `<p class="hp-note ok">✓ 광고 제거됨</p>` : `<button type="button" class="hp-btn wide" data-hp="noads">🚫 광고 제거${price}</button>`}
+        ${Bridge.has("restorePurchases") ? `<button type="button" class="hp-btn ghost wide" data-hp="restore">구매 복원</button>` : ""}` : ""}
+      <h4>기록 지키기</h4>
+      <div class="hp-acts">
+        ${Bridge.has("showLeaderboard") ? `<button type="button" class="hp-btn ghost" data-hp="board">🏆 순위표</button>` : ""}
+        ${Bridge.has("cloudSave") ? `<button type="button" class="hp-btn ghost" data-hp="csave">☁️ 클라우드에 저장</button><button type="button" class="hp-btn ghost" data-hp="cload">☁️ 클라우드에서 불러오기</button>` : ""}
+        <button type="button" class="hp-btn ghost" data-hp="export">📋 백업 코드 복사</button>
+        <button type="button" class="hp-btn ghost" data-hp="import">📥 백업 코드로 복원</button>
+      </div>
+      <p class="hp-note">휴대폰을 바꾸거나 앱을 지우기 전에 백업 코드를 복사해 두면 등급·승률·여의주를 그대로 옮길 수 있습니다.</p>
+      <button type="button" class="hp-linkbtn" data-hp="privacy">개인정보처리방침</button>`,
+    async (k) => {
+      if (k.startsWith("buy:")) {
+        const s = SKINS.find(x => x.id === k.slice(4)), x = eco();
+        if (!s || x.orbs < s.price) return;
+        closeSheet();                                   // (수정) 확인 창이 상점 창 뒤에 가려지던 문제
+        if (!(await askConfirm(`${s.name} 스킨을 여의주 ${s.price}개로 살까요?`, "사기"))) return openShop();
+        x.orbs -= s.price; x.skins.push(s.id); x.skin = s.id; saveEco(x); applySkin(); showToast(`${s.name} 스킨을 적용했습니다.`, ""); openShop();
+      } else if (k.startsWith("use:")) { const x = eco(); x.skin = k.slice(4); saveEco(x); applySkin(); openShop(); }
+      else if (k === "adorb") { closeSheet(); const x = eco(); if (x.adOrbs >= HP.AD_ORBS_PER_DAY) return; if (await Ads.run("rewarded", "orbs")) { const y = eco(); y.adOrbs++; saveEco(y); addOrbs(HP.AD_ORBS); } openShop(); }
+      else if (k === "noads") { closeSheet(); buyRemoveAds(); }
+      else if (k === "restore") { await restorePurchases(); showToast(eco().adFree ? "구매 내역을 복원했습니다." : "복원할 구매 내역이 없습니다.", "info"); openShop(); }
+      else if (k === "board") Bridge.call("showLeaderboard");
+      else if (k === "csave") { const r = await Bridge.call("cloudSave", exportCode()); showToast(r ? "클라우드에 저장했습니다." : "클라우드 저장에 실패했습니다.", r ? "info" : "warn"); }
+      else if (k === "cload") { const r = await Bridge.call("cloudLoad"); const code = typeof r === "string" ? r : (r && r.data) || ""; if (!code) showToast("클라우드에 저장된 기록이 없습니다.", "info"); else importCode(code); }
+      else if (k === "export") { if (await copyTxt(exportCode())) showToast("백업 코드를 복사했습니다. 메모나 메시지에 붙여 넣어 보관하세요.", "info"); }
+      else if (k === "import") openImport();
+      else if (k === "privacy") openPrivacy();
+    });
+  }
+  /* 백업 코드: 이 기기의 hanok3d 기록 전체 (등급·승률·여의주·스킨·설정·온라인 ID) */
+  const b64e = s => { const u = new TextEncoder().encode(s); let t = ""; for (let i = 0; i < u.length; i++) t += String.fromCharCode(u[i]); return btoa(t); };
+  const b64d = s => { const t = atob(s); const u = new Uint8Array(t.length); for (let i = 0; i < t.length; i++) u[i] = t.charCodeAt(i); return new TextDecoder().decode(u); };
+  function exportCode() {
+    const d = {};
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^hanok3d[:.]/.test(k)) d[k] = localStorage.getItem(k); } } catch (e) {}
+    for (const k in store.mem) if (!d["hanok3d:" + k]) d["hanok3d:" + k] = store.mem[k];
+    return "HG1." + b64e(JSON.stringify({ v: 1, t: Date.now(), d }));
+  }
+  function openImport() {
+    openSheet(`<h3>📥 백업 코드로 복원</h3><p class="hp-p">복사해 둔 백업 코드(HG1.로 시작)를 붙여 넣으세요. 이 기기의 지금 기록은 백업 코드의 기록으로 바뀝니다.</p>
+      <textarea id="hp-import" rows="4" spellcheck="false" placeholder="HG1.…"></textarea>
+      <div class="hp-acts"><button type="button" class="hp-btn" data-hp="go">복원</button><button type="button" class="hp-btn ghost" data-hp="close">취소</button></div>`,
+      k => { if (k === "go") importCode(($h("hp-import").value || "").trim()); });
+  }
+  async function importCode(code) {
+    let o = null;
+    try { if (/^HG1\./.test(code)) o = JSON.parse(b64d(code.slice(4))); } catch (e) { o = null; }
+    if (!o || !o.d || typeof o.d !== "object") { playSound("error"); showToast("백업 코드가 올바르지 않습니다.", "warn"); return; }
+    closeSheet();
+    if (!(await askConfirm("이 기기의 기록을 백업 코드의 기록으로 바꿀까요? 지금 기록은 덮어씁니다.", "복원", "취소", true))) return;
+    try { Object.keys(o.d).forEach(k => { if (/^hanok3d[:.]/.test(k) && typeof o.d[k] === "string") localStorage.setItem(k, o.d[k]); }); }
+    catch (e) { showToast("이 환경에서는 기록을 저장할 수 없습니다.", "warn"); return; }
+    showToast("복원했습니다. 다시 시작합니다.", "info");
+    setTimeout(() => location.reload(), 900);
+  }
+
+  /* ---------------- 오늘의 공간사활 · 연습 문제 ---------------- */
+  /* 같은 판·같은 날짜(번호)는 어느 기기에서나 같은 문제. 판마다 따내기·단수 탈출이 번갈아 나옴 */
+  function pzSpec(board, src, id) {
+    const M = MODES[board], n = M.n, l = M.layers || M.n;
+    if (src === "daily") {
+      const [y, m, d] = id.split("-").map(Number), k = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(2026, 9, 1)) / 864e5);
+      return { seed: `day-${board}-${id}`, kind: ((k % 2) + 2) % 2 ? "esc" : "cap", n, l };
+    }
+    return { seed: `stage-${board}-${id}`, kind: id % 2 ? "cap" : "esc", n, l };
+  }
+  /* 문제 만들기는 별도 스레드(Web Worker)에서: 화면이 멈추지 않게. 못 쓰면 이 화면에서 직접 */
+  const pzWorker = (() => {
+    let w = null, failed = false, seq = 0; const pend = new Map();
+    function get() {
+      if (w || failed) return w;
+      try {
+        const src = $h("hanok-core").textContent + "\n;\n" + $h("hp-puzzlegen").textContent +
+          "\n;(function(){var prev=self.onmessage;self.onmessage=function(e){var d=e.data||{};if(d.hp){var r=null;try{r=hpPuzzleFor(self.HanokRules,d.seed,d.kind,d.n,d.l);}catch(err){}self.postMessage({hp:d.hp,r:r});return;}if(prev)prev.call(self,e);};})();";
+        w = new Worker(URL.createObjectURL(new Blob([src], { type: "text/javascript" })));
+        w.onmessage = e => { const p = pend.get(e.data && e.data.hp); if (p) { pend.delete(e.data.hp); p(e.data.r || null); } };
+        w.onerror = () => { failed = true; try { w.terminate(); } catch (e) {} w = null; pend.forEach(p => p(null)); pend.clear(); };
+      } catch (e) { failed = true; w = null; }
+      return w;
+    }
+    const local = s => { try { return window.hpPuzzleFor(window.HanokRules, s.seed, s.kind, s.n, s.l); } catch (e) { return null; } };
+    return s => {
+      const ww = get();
+      if (!ww) return new Promise(res => setTimeout(() => res(local(s)), 30));
+      return new Promise(res => { const id = ++seq; pend.set(id, r => res(r || local(s))); ww.postMessage({ hp: id, seed: s.seed, kind: s.kind, n: s.n, l: s.l }); });
+    };
+  })();
+  async function getPuzzle(board, src, id) {
+    const s = pzSpec(board, src, id), cache = store.get("pzCache", {}) || {};
+    if (cache[s.seed]) return cache[s.seed];
+    const p = await pzWorker(s);
+    if (p) { const keys = Object.keys(cache); if (keys.length > 24) delete cache[keys[0]]; cache[s.seed] = p; store.set("pzCache", cache); }
+    return p;
+  }
+  const modeFor = (n, l) => MODE_KEYS.find(m => MODES[m].n === n && (MODES[m].layers || MODES[m].n) === l) || "jamyong";
+  function hpCloseIntro() {
+    const b = document.body;
+    if (!b.classList.contains("intro-open")) return;
+    try { if (window.HanokAttract) window.HanokAttract.stop(); } catch (e) {}
+    b.classList.remove("intro-open");
+    setTimeout(() => { const r = $h("btn-reset-cam"); if (r) r.click(); }, 60);
+  }
+  async function startPuzzle(board, src, id) {
+    if (ONLINE.inGame) { showToast("온라인 대국 중에는 사활 문제를 풀 수 없습니다.", "warn"); return; }
+    closeSheet();                                       // (수정) 확인 창이 이 창 뒤에 가려지지 않게 먼저 닫음
+    if (moveNumber > 0 && !isGameOver && !tutorial && !(await askConfirm("진행 중인 대국을 지우고 사활 문제를 풀까요?", "풀기"))) return;
+    showToast("문제를 준비하는 중…", "info");
+    const p = await getPuzzle(board, src, id);
+    if (!p) { playSound("error"); showToast("문제를 만들지 못했습니다. 연습 문제를 풀어 보세요.", "warn"); return; }
+    hpCloseIntro();
+    store.set("pzBoard", board);
+    loadPuzzle(Object.assign({}, p, { board, src, id, tries: 0, solved: false, lock: false }));
+  }
+  function loadPuzzle(P) {
+    if (review) exitReview(true);
+    const m = modeFor(P.n, P.l);
+    if (mode !== m || vsAI) applyMode(m, false);
+    tutLoading = true; startNewGame(true); tutLoading = false;
+    tutorial = { k: 0, puzzle: P };
+    P.lock = false; if (!P.t0) P.t0 = performance.now();
+    P.black.forEach(i => { board[i] = 1; }); P.white.forEach(i => { board[i] = 2; });
+    boardHistory = [board.join("")]; seenPositions = new Set(boardHistory);
+    currentTurn = 1; tutHints = []; selected = -1; layerLock = -1;
+    currentLayer = coord(P.target[0]).y;
+    renderPuzzle("play"); updateUI();
+    setTimeout(() => { if (tutorial && tutorial.puzzle === P && sceneManager && document.body.classList.contains("theater-mode") && sceneManager.tutorialView) sceneManager.tutorialView(true); }, 160);
+  }
+  function renderPuzzle(state, gain) {
+    const P = tutorial.puzzle, panel = $h("tut-panel");
+    document.body.classList.add("tutorial-on");
+    $h("tut-step").textContent = P.src === "daily" ? "오늘의 사활" : `사활 ${P.id} / ${HP.STAGES}`;   // 판은 큐브 모양으로 바로 보임
+    $h("tut-title").textContent = P.kind === "cap" ? "따내기" : "단수 탈출";
+    const ask = P.kind === "cap"
+      ? `흑 차례입니다. 한 수로 백 돌 ${P.need}개를 한꺼번에 따내세요. 위·아래 층도 이웃입니다.`
+      : `흑 돌 ${P.need}개 무리가 단수(활로 1개)에 몰렸습니다. 한 수로 활로를 2개 이상으로 늘려 살리세요.`;
+    $h("tut-text").textContent = state === "done" ? (gain ? `✅ 정답! 여의주 +${gain}` : "✅ 정답!")
+      : state === "wrong" ? "❌ 아쉽습니다. 처음 모양으로 되돌립니다 — 다시 생각해 보세요." : ask;
+    const next = $h("tut-next");
+    next.disabled = state !== "done";
+    next.textContent = P.src === "daily" ? "연습 문제 ▶" : P.id >= HP.STAGES ? "완료 🎉" : "다음 문제 ▶";
+    panel.classList.toggle("done", state === "done");
+    requestAnimationFrame(placeTutPanel);
+  }
+  const _tutorialAfterMove = tutorialAfterMove;
+  tutorialAfterMove = function () {
+    if (!tutorial || !tutorial.puzzle) return _tutorialAfterMove();
+    const P = tutorial.puzzle;
+    currentTurn = 1; passCount = 0;
+    if (P.solved) return;
+    const ok = P.kind === "cap" ? P.target.every(i => board[i] === 0)
+      : (board[P.target[0]] === 1 && libertyPoints(board, P.target[0]).libs.length >= 2);
+    if (ok) {
+      P.solved = true; P.lock = true;
+      const gain = rewardPuzzle(P);
+      renderPuzzle("done", gain);
+      playSound("end");
+      if (sceneManager && sceneManager.celebrate) sceneManager.celebrate(6);
+      if (P.src === "daily") setTimeout(() => showWinBar({ kind: "puzzle", mode, streak: eco().pz.streak }), 1500);
+    } else {
+      P.tries++; P.lock = true;
+      playSound("error"); renderPuzzle("wrong");
+      setTimeout(() => { if (tutorial && tutorial.puzzle === P && !P.solved) loadPuzzle(P); }, 1500);
+    }
+  };
+  function rewardPuzzle(P) {
+    const e = eco(), pz = e.pz, bd = pz.b[P.board]; let gain = 0;
+    if (P.src === "daily") {
+      if (!bd.daily[P.id]) {
+        bd.daily[P.id] = 1; gain = HP.REWARD_DAILY;
+        const ks = Object.keys(bd.daily).sort(); if (ks.length > 40) ks.slice(0, ks.length - 40).forEach(k => delete bd.daily[k]);
+        if (pz.last !== P.id) {                         // 연속 일수: 하루에 어느 판이든 한 문제 이상
+          pz.streak = pz.last === yesterdayStr() ? (pz.streak || 0) + 1 : 1; pz.last = P.id;
+          if (pz.streak === 7) Bridge.fire("unlockAchievement", "daily_streak_7");
+          if (pz.streak === 30) Bridge.fire("unlockAchievement", "daily_streak_30");
+          Bridge.fire("scheduleDailyReminder", 20, 0, "오늘의 공간사활", "새 공간사활 문제가 기다리고 있어요. 한 수로 풀어 보세요!");
+        }
+        if (PZ_BOARDS.every(m => pz.b[m].daily[P.id])) Bridge.fire("unlockAchievement", "daily_all_boards");
+      }
+    } else {
+      if (!bd.solved.includes(P.id)) {
+        bd.solved.push(P.id); gain = HP.REWARD_STAGE;
+        const all = PZ_BOARDS.reduce((t, m) => t + pz.b[m].solved.length, 0);
+        if (all === 10) Bridge.fire("unlockAchievement", "stage_10");
+        if (bd.solved.length === HP.STAGES) Bridge.fire("unlockAchievement", "stage_100_" + modeStoreKey(P.board));
+      }
+      bd.next = Math.min(HP.STAGES, Math.max(bd.next || 1, P.id + 1));
+    }
+    if (gain > 0) recordPuzzleStat(P);
+    e.orbs += gain; saveEco(e);
+    return gain;
+  }
+  const _tapPoint = tapPoint;
+  tapPoint = function (i) {
+    if (i >= 0 && tutorial && tutorial.puzzle && tutorial.puzzle.lock) {
+      showToast(tutorial.puzzle.solved ? "정답입니다! ‘다음 문제’를 누르거나 ✕로 닫으세요." : "처음 모양으로 되돌리는 중입니다.", "info");
+      return;
+    }
+    return _tapPoint(i);
+  };
+  /* 사활 중에는 안내창의 ‘다시’·‘다음’이 문제용으로 작동 */
+  $h("tut-retry").addEventListener("click", e => {
+    if (!tutorial || !tutorial.puzzle) return;
+    e.stopImmediatePropagation(); loadPuzzle(tutorial.puzzle);
+  }, true);
+  $h("tut-next").addEventListener("click", e => {
+    if (!tutorial || !tutorial.puzzle) return;
+    e.stopImmediatePropagation();
+    const P = tutorial.puzzle;
+    if (P.src === "stage" && P.id >= HP.STAGES) { endTutorial(true); startNewGame(true); showToast("연습 문제를 모두 풀었습니다! 🎉", ""); return; }
+    startPuzzle(P.board, "stage", P.src === "daily" ? (eco().pz.b[P.board].next || 1) : P.id + 1);
+  }, true);
+  function openPuzzleSheet(board) {
+    const e = eco(), pz = e.pz, t = todayStr();
+    board = PZ_BOARDS.includes(board) ? board : (PZ_BOARDS.includes(store.get("pzBoard", "")) ? store.get("pzBoard", "") : "jamyong");
+    const bd = pz.b[board], done = !!bd.daily[t];
+    const streak = pz.last === t || pz.last === yesterdayStr() ? pz.streak || 0 : 0;
+    const next = Math.min(HP.STAGES, bd.next || 1);
+    const tabs = PZ_BOARDS.map(m => `<button type="button" class="hp-tab g-${m}${m === board ? " on" : ""}" data-hp="tab:${m}" aria-pressed="${m === board}">`
+      + `<b translate="no">${MODES[m].title}</b><small>${pz.b[m].daily[t] ? "✓" : "●"} ${pz.b[m].solved.length}/${HP.STAGES}</small></button>`).join("");
+    openSheet(`<h3>🧩 공간사활</h3>
+      <div class="hp-tabs" role="group" aria-label="판 고르기">${tabs}</div>
+      <p class="hp-streak">🔥 연속 ${streak}일</p>
+      <div class="hp-pz">
+        <div class="hp-pz-h"><b>오늘의 공간사활</b><span>${t}</span></div>
+        <p class="hp-p">${done ? "✓ 오늘 문제를 풀었습니다. 내일 새 문제가 나옵니다." : `한 수로 푸는 입체 문제입니다. 풀면 여의주 +${HP.REWARD_DAILY}`}</p>
+        <div class="hp-acts"><button type="button" class="hp-btn" data-hp="daily">${done ? "다시 풀기" : "오늘 문제 풀기"}</button>
+        ${done ? `<button type="button" class="hp-btn ghost" data-hp="brag">📤 자랑하기</button>` : ""}</div>
+      </div>
+      <div class="hp-pz">
+        <div class="hp-pz-h"><b>연습 문제</b><span>${bd.solved.length} / ${HP.STAGES}</span></div>
+        <div class="hp-bar"><i style="width:${Math.round(bd.solved.length / HP.STAGES * 100)}%"></i></div>
+        <div class="hp-acts"><button type="button" class="hp-btn" data-hp="stage">${next}번 문제 풀기</button>
+        ${next > 1 ? `<button type="button" class="hp-btn ghost" data-hp="stage1">1번부터</button>` : ""}</div>
+      </div>
+      <p class="hp-note">모든 문제는 규칙 엔진으로 ‘정답이 한 자리뿐’인지 확인해 자동으로 만든 1수 문제입니다.</p>`,
+    k => {
+      if (k.startsWith("tab:")) { store.set("pzBoard", k.slice(4)); openPuzzleSheet(k.slice(4)); }
+      else if (k === "daily") startPuzzle(board, "daily", t);
+      else if (k === "stage") startPuzzle(board, "stage", next);
+      else if (k === "stage1") startPuzzle(board, "stage", 1);
+      else if (k === "brag") { closeSheet(); openShare({ kind: "puzzle", mode: board, streak }); }
+    });
+  }
+
+  /* ---------------- 메인 메뉴 · 게임 화면 버튼 ---------------- */
+  (() => {
+    const icons = document.querySelector("#intro .menu-icons"), exit = icons && icons.querySelector('[data-action="exit"]');
+    if (icons) {
+      const mk = (key, label, svg, extra) => { const b = document.createElement("button"); b.type = "button"; b.className = "mi"; b.dataset.hp = key;
+        b.innerHTML = `<span class="mi-ico">${svg}${extra || ""}</span><span class="mi-label">${label}</span>`; icons.insertBefore(b, exit); return b; };
+      /* 사활: 입체 큐브 위에 놓일 '한 수'(흰 점선 고리 + 돌) — 다른 아이콘과 구별되게 옥색 */
+      mk("puzzle", "사활", `<svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l7.8 4.4v9.6L12 21.2l-7.8-4.4V7.2z"/><path d="M4.2 7.2L12 11.6l7.8-4.4M12 11.6v9.6"/><circle class="hp-stone" cx="12" cy="7.2" r="1.9"/><circle cx="12" cy="7.2" r="3.6" stroke-dasharray="1.6 1.4"/></svg>`, `<i class="hp-dot" aria-hidden="true"></i>`)
+        .addEventListener("click", openPuzzleSheet);
+      /* 상점: 불꽃에 싸인 여의주 — 푸른 진주색 */
+      mk("shop", "상점", `<svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13.5" r="5.6"/><path d="M9.6 12.2a2.8 2.8 0 0 1 2.6-1.9"/><path d="M6.2 11.2C5 8.4 6.6 5.6 9 4.8c-.4 1.5.3 2.6 1.2 3.1M17.8 11.2c1.2-2.8-.4-5.6-2.8-6.4.4 1.5-.3 2.6-1.2 3.1M12 7.8c-.9-1.2-.7-3 .6-4.6.3 1.4 1.3 2 1.2 3.6"/></svg>`, `<i class="hp-orb-badge" aria-hidden="true"></i>`)
+        .addEventListener("click", openShop);
+      /* 패스·교구 인증: 금빛 열쇠 */
+      mk("pass", "인증", `<svg class="mi-svg" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="12" r="4.2"/><circle cx="8" cy="12" r="1.4"/><path d="M12.2 12H21M17.5 12v3.2M20 12v2.4"/></svg>`, `<i class="hp-star" aria-hidden="true">★</i>`)
+        .addEventListener("click", () => openPass());
+    }
+    /* AI 훈수 버튼: 소리 아이콘과 같은 모양·크기로 같은 묶음(.corner-tools)에 — 세로 화면은 소리 위, 대화면은 소리 아래 (CSS) */
+    const corner = $h("corner-tools");
+    if (corner) {
+      const hb = document.createElement("button"); hb.type = "button"; hb.className = "btn-header hint-hdr"; hb.id = "btn-hint";
+      hb.title = "AI 훈수: 고급 AI가 추천하는 다음 수를 3D 큐브 위에 보여 줍니다 (H)"; hb.setAttribute("aria-label", "AI 훈수");
+      hb.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg><i class="hp-cnt" aria-hidden="true"></i>`;
+      corner.appendChild(hb); hb.addEventListener("click", requestHint);
+    }
+    window.addEventListener("keydown", e => {
+      if ((e.key === "h" || e.key === "H") && !e.ctrlKey && !e.metaKey && !e.altKey && !sheet.classList.contains("show")
+        && !(e.target && e.target.closest && e.target.closest("input, textarea")) && document.body.classList.contains("vs-ai") && !document.body.classList.contains("intro-open")) requestHint();
+    });
+    renderOrbs(); renderHintBtn();
+  })();
+
+  /* ---------------- 웹대국: 사람이 없으면 AI 연습 상대 (AI라고 분명히 표시) ---------------- */
+  window.__hpStartBot = m => {
+    if (ONLINE.inGame) return;
+    hpCloseIntro();
+    applyMode(MODES[m] ? m : mode, true);
+    pop("AI 연습 상대");
+    setTimeout(() => showToast("지금은 기다리는 사람이 없어 AI 연습 상대와 대국합니다. 웹대국 레이팅에는 반영되지 않습니다.", "info"), 250);   // 시점 되돌림 알림 뒤에
+  };
+
+  /* =====================================================================
+     멤버십 (프리미엄 구독 · 교구/기관 코드) · 공간 두뇌 발달 지수 · 급수·단증 신청
+     ===================================================================== */
+  function memberInfo() { return store.get("member", null); }   // (함수 선언: 위쪽 코드가 먼저 불러도 됨)
+  function isMember() { const m = memberInfo(); return !!(m && (m.until === 0 || m.until > Date.now())); }
+  function setMember(m) { store.set("member", m); renderOrbs(); renderHintBtn(); renderMemberBadge(); }
+  function renderMemberBadge() { const b = document.querySelector('.mi[data-hp="pass"]'); if (b) b.classList.toggle("vip", isMember()); }
+  const fmtDay = t => todayStr(new Date(t));
+  const memberUntilText = m => !m ? "" : m.until === 0 ? (m.src === "sub" ? "구독 중" : "기한 없음") : `${fmtDay(m.until)}까지`;
+  const CODE_TYPE = { 1: "교구", 2: "기관", 3: "체험" };
+  /* 코드 = HGL1- + Crockford Base32( 8바이트 내용 + ECDSA P-256 서명 64바이트 ). 앱에는 '공개 키'만 있어 코드를 만들 수 없음 */
+  const B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+  function unb32(s) {
+    s = String(s).toUpperCase().replace(/^\s*HGL1-?/, "").replace(/[^0-9A-Z]/g, "").replace(/O/g, "0").replace(/[IL]/g, "1");
+    let bits = 0, v = 0; const o = [];
+    for (const ch of s) { const k = B32.indexOf(ch); if (k < 0) return null; v = ((v << 5) | k) & 0xffff; bits += 5; if (bits >= 8) { o.push((v >>> (bits - 8)) & 255); bits -= 8; } }
+    return new Uint8Array(o);
+  }
+  async function verifyCode(code) {
+    try {
+      const raw = unb32(code); if (!raw || raw.length !== 72 || raw[0] !== 1) return null;
+      const p = raw.slice(0, 8), sig = raw.slice(8);
+      const key = await crypto.subtle.importKey("jwk", HP.LICENSE_PUBLIC_JWK, { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+      if (!(await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, key, sig, p))) return null;
+      const days = (p[2] << 8) | p[3], serial = ((p[4] << 24) >>> 0) + (p[5] << 16) + (p[6] << 8) + p[7];
+      return { type: p[1], serial, until: days ? Date.UTC(2026, 0, 1) + (days + 1) * 864e5 - 1 : 0 };   // 기한 날짜가 끝날 때까지
+    } catch (e) { return null; }
+  }
+  async function redeem(code) {
+    code = String(code || "").trim();
+    if (!code) { showToast("코드를 붙여 넣으세요.", "warn"); return; }
+    if (!(window.crypto && crypto.subtle)) { showToast("이 환경에서는 코드를 확인할 수 없습니다 (보안 연결 필요).", "warn"); return; }
+    const r = await verifyCode(code);
+    if (!r) { playSound("error"); showToast("올바른 코드가 아닙니다. 빠진 글자가 없는지 확인하세요.", "warn"); return; }
+    if (r.until && r.until < Date.now()) { playSound("error"); showToast("기한이 지난 코드입니다.", "warn"); return; }
+    setMember({ src: "code", type: r.type, serial: r.serial, until: r.until, code });
+    closeSheet(); playSound("end"); launchFireworks();
+    showToast(`⭐ 마스터 멤버십이 열렸습니다 (${CODE_TYPE[r.type] || "코드"} · ${r.until ? fmtDay(r.until) + "까지" : "기한 없음"})`, "");
+    Bridge.fire("unlockAchievement", "member");
+  }
+  async function buySub(sku) {
+    let ok = false;
+    if (HP_TEST) ok = await askConfirm("테스트 구독입니다 (실제 결제 아님). 멤버십을 적용할까요?", "적용");
+    else { const r = await Bridge.call("purchase", sku); ok = r === true || !!(r && r.ok); }
+    if (ok) { setMember({ src: "sub", sku, until: 0 }); playSound("end"); launchFireworks(); showToast("⭐ 프리미엄 구독이 시작되었습니다. 고맙습니다!", ""); }
+    else showToast("결제가 완료되지 않았습니다.", "warn");
+  }
+  async function openPass(prefill, auto) {
+    const m = memberInfo(), on = isMember();
+    let pm = "", py = "";
+    if (!HP_TEST && Bridge.has("getProducts")) {
+      const r = await Bridge.call("getProducts", [HP.SKU_SUB_MONTH, HP.SKU_SUB_YEAR]);
+      const f = sku => { const p = Array.isArray(r) ? r.find(x => x && x.sku === sku) : null; return p && p.price ? ` · ${esc(p.price)}` : ""; };
+      pm = f(HP.SKU_SUB_MONTH); py = f(HP.SKU_SUB_YEAR);
+    }
+    openSheet(`<h3>🔑 패스·교구 인증</h3>
+      <div class="hp-member${on ? " on" : ""}"><b>${on ? "⭐ 마스터 멤버십" : "무료 이용 중"}</b><span>${on ? esc(memberUntilText(m)) : ""}</span></div>
+      <ul class="hp-benefits"><li>AI 훈수 무제한</li><li>AI 도전 무르기 무제한</li><li>전면 광고 없음</li><li>공간 두뇌 발달 지수 리포트</li></ul>
+      <h4>교구·기관 코드</h4>
+      <p class="hp-note">공간바둑 교구 상자나 학교·기관에서 받은 코드(HGL1-로 시작)를 붙여 넣으세요. 상자의 QR 코드를 찍으면 자동으로 채워집니다.</p>
+      <textarea id="hp-code" rows="3" spellcheck="false" autocomplete="off" placeholder="HGL1-…">${esc(prefill || "")}</textarea>
+      <div class="hp-acts"><button type="button" class="hp-btn" data-hp="redeem">인증하기</button></div>
+      ${payOK() ? `<h4>프리미엄 구독</h4><div class="hp-acts"><button type="button" class="hp-btn vip" data-hp="sub:m">월간 구독${pm}</button><button type="button" class="hp-btn vip" data-hp="sub:y">연간 구독${py}</button></div>
+        ${Bridge.has("restorePurchases") ? `<button type="button" class="hp-btn ghost wide" data-hp="restore">구매 복원</button>` : ""}
+        <p class="hp-note">구독은 Google Play에서 관리·해지할 수 있습니다.</p>` : ""}
+      ${on && m && m.src === "code" ? `<p class="hp-note">인증된 코드: ${esc(CODE_TYPE[m.type] || "")} · 일련번호 ${m.serial}</p>` : ""}
+      <button type="button" class="hp-linkbtn" data-hp="privacy">개인정보처리방침</button>`,
+    async k => {
+      if (k === "redeem") redeem($h("hp-code").value);
+      else if (k === "sub:m" || k === "sub:y") { closeSheet(); await buySub(k === "sub:m" ? HP.SKU_SUB_MONTH : HP.SKU_SUB_YEAR); }
+      else if (k === "restore") { await restorePurchases(); showToast(isMember() ? "구매 내역을 복원했습니다." : "복원할 구매 내역이 없습니다.", "info"); openPass(); }
+      else if (k === "privacy") openPrivacy();
+    });
+    if (auto && prefill) redeem(prefill);
+  }
+  /* 구독은 앱을 켤 때마다 Play에서 다시 확인, 코드는 서명·기한을 다시 확인 */
+  const _restorePurchases = restorePurchases;
+  restorePurchases = async function () {
+    await _restorePurchases();
+    if (!Bridge.has("restorePurchases")) return;
+    const r = await Bridge.call("restorePurchases");
+    const list = Array.isArray(r) ? r : (r && Array.isArray(r.skus) ? r.skus : []);
+    const sub = [HP.SKU_SUB_MONTH, HP.SKU_SUB_YEAR].find(x => list.includes(x)), m = memberInfo();
+    if (sub && !isMember()) setMember({ src: "sub", sku: sub, until: 0 });
+    else if (!sub && m && m.src === "sub") setMember(null);
+  };
+  async function revalidateMember() {
+    const m = memberInfo(); if (!m) return;
+    if (m.src === "code") {
+      const r = await verifyCode(m.code || "");
+      if (!r || (r.until && r.until < Date.now())) { setMember(null); showToast("멤버십 기한이 끝났습니다. 새 코드나 구독으로 이어 갈 수 있습니다.", "info"); }
+      else if (m.until !== r.until || m.type !== r.type || m.serial !== r.serial) setMember(Object.assign({}, m, r));   // 저장값을 고쳐도 코드에 서명된 기한이 기준
+    }
+  }
+
+  /* ---------------- 공간 두뇌 발달 지수: AI 도전·사활 기록으로 계산 ----------------
+     게임 기록에서 계산한 참고 지표입니다 (의학·심리 검사가 아님). 계산 방법은 등급 창의 '계산 방법'에 그대로 적혀 있음 */
+  const ST_DEF = () => ({ mv: 0, vert: 0, tN: 0, tSum: 0, at: 0, esc: 0, capF: 0, capA: 0, pz: { cap: [0, 0], esc: [0, 0] }, pzT: 0, pzN: 0 });
+  const stats = () => { const s0 = Object.assign(ST_DEF(), store.get("brain", null) || {}); s0.pz = Object.assign(ST_DEF().pz, s0.pz || {}); return s0; };
+  let turnT0 = performance.now(), brainSerial = -1;
+  const _pmB = playMove;
+  playMove = function (index) {
+    const human = 3 - AI_COLOR;
+    const track = vsAI && !ONLINE.inGame && !tutorial && !review && !isGameOver && currentTurn === human && !aiRunning && board[index] === 0 && gameType === "go";
+    let ataris = null, vert = false, think = 0;
+    if (track) {
+      think = Math.min(120000, performance.now() - turnT0);
+      ataris = []; const seen = new Uint8Array(TOTAL);
+      for (let i = 0; i < TOTAL; i++) if (board[i] === human && !seen[i]) { const g = getGroup(board, i); g.stones.forEach(x => { seen[x] = 1; }); if (g.liberties === 1) ataris.push(i); }
+      const y = coord(index).y; vert = NEIGHBORS[index].some(nb => board[nb] && coord(nb).y !== y);
+    }
+    const before = moveNumber;
+    const r = _pmB(index);
+    if (moveNumber !== before) {
+      if (track) {
+        const st = stats(); st.mv++; if (vert) st.vert++; st.tN++; st.tSum += think / 1000;
+        for (const a of ataris) { st.at++; if (board[a] === human && getGroup(board, a).liberties >= 2) st.esc++; }
+        store.set("brain", st);
+      }
+      turnT0 = performance.now();
+    }
+    return r;
+  };
+  const _sngB = startNewGame; startNewGame = function (q) { turnT0 = performance.now(); return _sngB(q); };
+  const _undoB = undoMove; undoMove = function () { const r = _undoB(); turnT0 = performance.now(); return r; };
+  const _recB = recordAIResult;
+  recordAIResult = function () {
+    _recB();
+    if (!vsAI || !lastRecord || tutorial || ONLINE.inGame || brainSerial === gameSerial) return;
+    brainSerial = gameSerial;
+    const st = stats(), human = 3 - AI_COLOR; st.capF += captures[human] || 0; st.capA += captures[AI_COLOR] || 0; store.set("brain", st);
+  };
+  function recordPuzzleStat(P) {
+    const st = stats(), k = P.kind === "cap" ? "cap" : "esc";
+    st.pz[k][0]++; if (!P.tries) st.pz[k][1]++;
+    if (P.t0) { st.pzT += Math.min(300, (performance.now() - P.t0) / 1000); st.pzN++; }
+    store.set("brain", st);
+  }
+  function brainIndex() {
+    const st = stats(), cl = v => Math.max(0, Math.min(100, Math.round(v)));
+    const mix = parts => { const ok = parts.filter(p => p[1] != null); if (!ok.length) return null; const w = ok.reduce((t, p) => t + p[0], 0); return cl(ok.reduce((t, p) => t + p[0] * p[1], 0) / w); };
+    const pzAll = st.pz.cap[0] + st.pz.esc[0], pzFirst = st.pz.cap[1] + st.pz.esc[1], nT = st.tN + st.pzN;
+    const spatial = mix([[0.6, st.mv >= 20 ? Math.min(1, st.vert / st.mv / 0.5) * 100 : null], [0.4, pzAll >= 3 ? pzFirst / pzAll * 100 : null]]);
+    const tAvg = nT ? (st.tSum + st.pzT) / nT : 0;
+    const speed = nT >= 20 ? Math.max(10, cl(100 - (tAvg - 3) * 2.5)) : null;
+    const defense = mix([[0.5, st.at >= 5 ? st.esc / st.at * 100 : null], [0.3, st.pz.esc[0] >= 3 ? st.pz.esc[1] / st.pz.esc[0] * 100 : null],
+      [0.2, st.capF + st.capA >= 10 ? st.capF / (st.capF + st.capA) * 100 : null]]);
+    return { spatial, speed, defense, st, tAvg };
+  }
+  const grade = v => v == null ? "기록 부족" : v >= 80 ? "우수" : v >= 60 ? "좋음" : v >= 40 ? "보통" : "기초";
+  const eligibleBoards = () => MODE_KEYS.filter(m => rankIndex(getRecord(m).hw) >= HP.CERT_MIN_RANK);
+  function brainHTML() {
+    const b = brainIndex(), st = b.st;
+    const row = (label, v) => `<div class="bi-row"><span class="bi-l">${label}</span><span class="bi-bar"><i style="width:${v == null ? 0 : v}%"></i></span><b class="bi-v">${v == null ? "—" : v}</b><em class="bi-g">${grade(v)}</em></div>`;
+    const el = eligibleBoards();
+    return `<div class="bi-wrap">
+      <div class="bi-head"><b>🧠 공간 두뇌 발달 지수</b>${isMember() ? `<span class="bi-vip">⭐ 멤버십</span>` : ""}</div>
+      ${row("공간지각력", b.spatial)}${row("수읽기 집중력", b.speed)}${row("사활 계산력", b.defense)}
+      <p class="bi-n">AI 도전 착수 ${st.mv}수 · 공간사활 ${st.pz.cap[0] + st.pz.esc[0]}문제 기준</p>
+      <details class="bi-how"><summary>계산 방법</summary>
+        <p>공간지각력 = 위·아래 층 돌과 맞닿게 둔 수의 비율(50%면 만점) 60% + 사활 첫 시도 정답률 40%</p>
+        <p>수읽기 집중력 = AI 도전 한 수·사활 한 문제의 평균 생각 시간 (3초 100점, 1초 늘 때마다 2.5점 감소)</p>
+        <p>사활 계산력 = 단수에 몰린 내 돌을 다음 수로 살린 비율 50% + 단수 탈출 사활 첫 시도 정답률 30% + 따낸 돌 비율 20%</p>
+        <p>기록이 적으면 ‘기록 부족’으로 표시합니다 (착수 20수·사활 3문제 이상부터).</p>
+      </details>
+      <p class="bi-note">게임 기록으로 계산한 참고 지표입니다. 의학·심리 검사나 학습 효과를 증명하는 수치가 아닙니다.</p>
+      <div class="bi-acts">
+        <button type="button" class="btn" data-bi="share">📤 리포트 공유</button>
+        <button type="button" class="btn primary" data-bi="cert"${el.length ? "" : " disabled"}>${esc(HP.CERT_LABEL)}</button>
+      </div>
+      <p class="bi-n">${el.length ? `신청 가능: ${el.map(m => `${MODES[m].title} ${rankName(m, getRecord(m).hw)}`).join(" · ")}` : "3×3×3 5급 · 3×5×5 5부 · 2×7×7 5단 이상(난이도 고급 승급)이면 신청 버튼이 열립니다"}</p>
+    </div>`;
+  }
+  /* 등급 창 내용이 그려질 때마다 아래에 지수·신청 영역을 붙임 */
+  (() => {
+    const body = $h("rank-info-body"); if (!body) return;
+    new MutationObserver(() => { if (body.firstElementChild && !body.querySelector(".bi-wrap")) body.insertAdjacentHTML("beforeend", brainHTML()); })
+      .observe(body, { childList: true });
+    body.addEventListener("click", e => {
+      const b = e.target.closest("[data-bi]"); if (!b || b.disabled) return;
+      closeRankInfo();
+      if (b.dataset.bi === "share") shareReport(); else openCert();
+    });
+  })();
+  function reportText() {
+    const b = brainIndex(), rec = MODE_KEYS.map(m => { const r = getRecord(m); return `${MODES[m].title} ${rankName(m, r.hw)} (고급 ${r.hw}승 ${r.hl}패)`; }).join(" / ");
+    const v = x => x == null ? "기록 부족" : `${x}점 (${grade(x)})`;
+    return `[공간바둑 학습 리포트 · ${todayStr()}]\n등급: ${rec}\n공간지각력: ${v(b.spatial)}\n수읽기 집중력: ${v(b.speed)}\n사활 계산력: ${v(b.defense)}\nAI 도전 ${b.st.mv}수 · 공간사활 ${b.st.pz.cap[0] + b.st.pz.esc[0]}문제 기준\n※ 게임 기록으로 계산한 참고 지표이며 의학·심리 검사가 아닙니다.`;
+  }
+  async function shareReport() {
+    const t = reportText();
+    try { if (window.HanokApp && window.HanokApp.share) { window.HanokApp.share(t); return; } if (navigator.share) { await navigator.share({ title: "공간바둑 학습 리포트", text: t }); return; } }
+    catch (e) { if (e && e.name === "AbortError") return; }
+    if (await copyTxt(t)) showToast("리포트를 복사했습니다. 메시지에 붙여 넣어 보내세요.", "info");
+  }
+  async function sha256hex(s) { try { const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return Array.from(new Uint8Array(h), x => x.toString(16).padStart(2, "0")).join(""); } catch (e) { return ""; } }
+  function openCert() {
+    const el = eligibleBoards();
+    if (!el.length) { showToast("아직 신청할 수 있는 등급이 아닙니다.", "info"); return; }
+    openSheet(`<h3>🎓 급수·단증 발급 신청</h3>
+      <p class="hp-p">신청 등급: ${el.map(m => `${MODES[m].title} ${rankName(m, getRecord(m).hw)}`).join(" · ")}</p>
+      <label class="hp-f"><span>이름 (급수증에 적힐 이름)</span><input id="cf-name" maxlength="20" autocomplete="name"></label>
+      <label class="hp-f"><span>소속 기관 (선택)</span><input id="cf-org" maxlength="40"></label>
+      <label class="hp-f"><span>연락 이메일 (만 14세 미만은 보호자 이메일)</span><input id="cf-mail" type="email" maxlength="80" autocomplete="email"></label>
+      <label class="hp-chk"><input type="checkbox" id="cf-ok"><span>급수증 발급을 위해 이름·소속·이메일·대국 기록을 운영자에게 보내는 데 동의합니다. (발급 확인 후 1년 보관 뒤 삭제)</span></label>
+      <div class="hp-acts">
+        ${HP.CERT_EMAIL ? `<button type="button" class="hp-btn" data-hp="mail">📧 이메일로 신청</button>` : ""}
+        <button type="button" class="hp-btn${HP.CERT_EMAIL ? " ghost" : ""}" data-hp="copy">📋 신청서 복사</button>
+      </div>
+      <p class="hp-note">등급은 이 기기의 기록이라, 운영자가 확인 대국(온라인 등)으로 실력을 확인한 뒤 발급합니다.</p>`,
+    async k => {
+      const name = ($h("cf-name").value || "").trim(), org = ($h("cf-org").value || "").trim(), mail = ($h("cf-mail").value || "").trim();
+      if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail)) { playSound("error"); showToast("이름과 올바른 이메일을 적어 주세요.", "warn"); return; }
+      if (!$h("cf-ok").checked) { playSound("error"); showToast("개인정보 제공에 동의해야 신청할 수 있습니다.", "warn"); return; }
+      const pidH = (await sha256hex("hanok3d-pid:" + store.get("pid", ""))).slice(0, 12);
+      const lines = [`[HANOK3D GO 급수·단증 발급 신청]`, `신청일: ${todayStr()}`, `이름: ${name}`, `소속: ${org || "-"}`, `연락 이메일: ${mail}`,
+        `신청 등급: ${el.map(m => { const r = getRecord(m); return `${MODES[m].title} ${rankName(m, r.hw)} (고급 ${r.hw}승 ${r.hl}패)`; }).join(" / ")}`,
+        reportText().split("\n").slice(2, 5).join(" / "), `플레이어 ID 해시: ${pidH || "-"}`];
+      const check = (await sha256hex(lines.join("\n"))).slice(0, 16).toUpperCase();
+      const text = lines.concat([`확인 코드: ${check}`, `※ 기기 기록 기반 — 운영자 확인 대국 후 발급`]).join("\n");
+      if (k === "mail") location.href = `mailto:${encodeURIComponent(HP.CERT_EMAIL)}?subject=${encodeURIComponent("공간바둑 급수·단증 발급 신청 - " + name)}&body=${encodeURIComponent(text)}`;
+      else if (await copyTxt(text)) showToast("신청서를 복사했습니다. 운영자 안내에 따라 보내 주세요.", "info");
+    });
+  }
+
+  /* ---------------- 개인정보처리방침 (앱 안에 내장 · 메인 메뉴·상점·인증·웹대국 창에서 언제든 열림) ---------------- */
+  function openPrivacy() {
+    const P = HP.PRIVACY, url = P.url || "";
+    openSheet(`<h3>🔒 개인정보처리방침</h3><div class="hp-policy">
+      <p>시행일: ${esc(P.since)} · 운영자: ${esc(P.operator)} · 문의: ${esc(P.email)}</p>
+      <h4>1. 회원가입 없음</h4><p>회원가입·로그인이 없습니다. 이름·전화번호·위치·연락처·사진을 수집하지 않습니다.</p>
+      <h4>2. 기기 안에만 저장</h4><p>등급·승률·설정·여의주·스킨·사활 기록·멤버십 코드·두뇌 지수 기록은 이 기기 안에만 저장되고 운영자에게 전송되지 않습니다. 앱을 지우면 함께 지워집니다.</p>
+      <h4>3. 온라인 대국 이용 시</h4><p>대국용 이름(상대에게 표시, 대국 종료 시까지), 기기마다 무작위로 만든 플레이어 ID의 해시(온라인 레이팅, 마지막 이용 후 1년), 둔 수·접속 시각(대국 종료 후 삭제), 접속 IP(서버 로그, 30일)를 처리합니다. 서버 위치: ${esc(P.server)}</p>
+      <h4>4. 급수·단증 신청 시</h4><p>이름·소속·이메일(만 14세 미만은 보호자 이메일)·등급 기록을 이용자가 직접 보낼 때만 받으며, 발급 확인 후 1년 보관 뒤 삭제합니다.</p>
+      <h4>5. 외부 서비스</h4><p>글꼴(Google Fonts)을 불러올 때 IP가 Google에 전달될 수 있습니다. 앱의 결제·구독은 Google Play가 처리하며 운영자는 결제 정보를 받지 않습니다. 광고를 넣는 경우 Google AdMob이 광고 ID를 처리할 수 있습니다.</p>
+      <h4>6. 이용자의 권리</h4><p>기기 기록은 앱 데이터 삭제로 지울 수 있습니다. 온라인 기록 삭제는 ${esc(P.email)}로 요청하세요.</p>
+      <h4>7. 아동</h4><p>전체 이용가 게임이며 만 14세 미만 아동의 개인정보를 따로 수집하지 않습니다.</p>
+    </div>${url ? `<div class="hp-acts"><button type="button" class="hp-btn ghost" data-hp="web">🌐 웹에서 전체 보기</button></div>` : ""}`,
+    k => { if (k === "web" && url) { try { window.open(url, "_blank", "noopener"); } catch (e) { location.href = url; } } });
+  }
+  window.__hpPrivacy = openPrivacy;
+  (() => {   /* 메인 메뉴 맨 아래: 항상 보이는 개인정보처리방침 링크 */
+    const intro = $h("intro"); if (!intro) return;
+    const a = document.createElement("button"); a.type = "button"; a.className = "hp-privacy-link"; a.textContent = "개인정보처리방침";
+    a.addEventListener("click", openPrivacy);
+    const icons = intro.querySelector(".menu-icons");
+    (icons && icons.parentNode ? icons.parentNode : intro).appendChild(a);
+  })();
+
+  window.HanokPlus = { cfg: HP, openPass, openPrivacy, isMember, brain: () => brainIndex(), openShop, openPuzzles: openPuzzleSheet, share: openShare, eco: () => eco(), test: HP_TEST };
+}
+
 function boot() {
   try {
     sceneManager = initThreeEngine();
@@ -10158,7 +11483,8 @@ function boot() {
     document.getElementById("canvas-container").appendChild(box);
     document.getElementById("webgl-canvas").style.display = "none";
   }
-  if (!ONLINE.inGame) applyMode("jamyong");   // 기본 창은 등용문 모드(3×3×3)로 시작 (초대 링크로 이미 대국이 시작됐으면 그 판 유지)
+  if (!ONLINE.inGame) applyMode("jamyong");
+  if (window.__hpAfterBoot) { try { window.__hpAfterBoot(); } catch (e) {} }   // 기본 창은 등용문 모드(3×3×3)로 시작 (초대 링크로 이미 대국이 시작됐으면 그 판 유지)
 }
 if (document.readyState === "complete") boot();
 else window.addEventListener("load", boot);
@@ -11375,9 +12701,207 @@ else window.addEventListener("load", boot);
   apply(saved, false);
   mo.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ATTRS });
 
-  window.HanokI18n = { set: l => apply(l, true), get: () => lang, t: (s, l) => (l && l !== "ko" ? tr(s, IDX[l]) : s) };
+  window.HanokI18n = { set: l => apply(l, true), get: () => lang, t: (s, l) => (l && l !== "ko" ? tr(s, IDX[l]) : s),
+    /* (2026-10 상업화 보강) 나중에 붙인 기능의 문구 사전·규칙 추가 */
+    add(dict, pats) {
+      for (const k in dict) T.set(norm(k), dict[k]);
+      if (Array.isArray(pats)) for (let i = pats.length - 1; i >= 0; i--) P.unshift(pats[i]);
+      cache.forEach(c => c.clear());
+      if (lang !== "ko") apply(lang, false);
+    } };
 })();
 
+</script>
+<script id="hp-i18n">
+/* ================= HANOK PLUS 다국어: 새 문구 [English, 日本語, 中文, Русский, Français, Deutsch] ================= */
+(function () {
+  if (!window.HanokI18n || !window.HanokI18n.add) return;
+  const T = {
+    "광고를 불러오는 중…": ["Loading ad…", "広告を読み込み中…", "正在加载广告…", "Загрузка рекламы…", "Chargement de la pub…", "Werbung wird geladen…"],
+    "테스트 광고 (실제 광고 아님)": ["Test ad (not a real ad)", "テスト広告（実際の広告ではありません）", "测试广告（非真实广告）", "Тестовая реклама (не настоящая)", "Pub de test (pas une vraie pub)", "Testwerbung (keine echte Werbung)"],
+    "건너뛰기 (보상 없음)": ["Skip (no reward)", "スキップ（報酬なし）", "跳过（无奖励）", "Пропустить (без награды)", "Passer (sans récompense)", "Überspringen (keine Belohnung)"],
+    "닫기": ["Close", "閉じる", "关闭", "Закрыть", "Fermer", "Schließen"],
+    "보상 받기 완료": ["Reward earned", "報酬獲得", "已获得奖励", "Награда получена", "Récompense obtenue", "Belohnung erhalten"],
+    "광고를 끝까지 보지 않아 보상이 지급되지 않았습니다.": ["The ad wasn’t watched to the end, so no reward was given.", "広告を最後まで見なかったため、報酬はありません。", "未看完广告，未发放奖励。", "Реклама не досмотрена — награды нет.", "Pub non regardée jusqu’au bout : pas de récompense.", "Werbung nicht zu Ende gesehen – keine Belohnung."],
+    "↩️ 무르기": ["↩️ Undo", "↩️ 待った", "↩️ 悔棋", "↩️ Отмена хода", "↩️ Annuler", "↩️ Zurücknehmen"],
+    "AI 도전에서는 한 판에 무료 무르기가 정해져 있습니다. 이번 판의 무료 무르기를 모두 썼습니다.": ["AI games include a limited number of free undos per game. You’ve used this game’s free undo.", "AI対局では1局あたりの無料「待った」の回数が決まっています。この対局の無料分を使い切りました。", "AI 挑战每局的免费悔棋次数有限，本局的免费悔棋已用完。", "В игре с ИИ число бесплатных отмен за партию ограничено. Бесплатная отмена в этой партии уже использована.", "Contre l’IA, les annulations gratuites par partie sont limitées. Vous avez utilisé celle de cette partie.", "Gegen die KI gibt es pro Partie begrenzt kostenlose Rücknahmen. Die dieser Partie ist verbraucht."],
+    "보유 여의주": ["Dragon pearls", "如意珠の所持数", "持有如意珠", "Жемчужины дракона", "Perles du dragon", "Drachenperlen"],
+    "🎬 광고 보고 무르기": ["🎬 Watch an ad to undo", "🎬 広告を見て待った", "🎬 看广告悔棋", "🎬 Отменить за просмотр рекламы", "🎬 Annuler en regardant une pub", "🎬 Werbung ansehen und zurücknehmen"],
+    "취소": ["Cancel", "キャンセル", "取消", "Отмена", "Annuler", "Abbrechen"],
+    "여의주는 AI 도전 승리, 오늘의 공간사활로 모을 수 있습니다.": ["Earn dragon pearls by beating the AI and solving the daily puzzle.", "如意珠はAI対局の勝利や今日の空間詰碁で集められます。", "战胜 AI 或完成今日空间死活题即可获得如意珠。", "Жемчужины можно получить за победы над ИИ и задачу дня.", "Gagnez des perles en battant l’IA et en résolvant le problème du jour.", "Perlen gibt es für Siege gegen die KI und die Tagesaufgabe."],
+    "훈수는 AI 도전 중에만 쓸 수 있습니다.": ["Hints are only available in AI games.", "ヒントはAI対局中のみ使えます。", "提示仅在 AI 挑战中可用。", "Подсказки доступны только в игре с ИИ.", "Les conseils ne sont disponibles que contre l’IA.", "Tipps gibt es nur gegen die KI."],
+    "복기를 끝낸 뒤 훈수를 받을 수 있습니다.": ["Finish the review first to get a hint.", "振り返りを終えてからヒントを使えます。", "请先结束复盘再获取提示。", "Сначала завершите разбор.", "Terminez la revue avant de demander un conseil.", "Beende zuerst den Rückblick."],
+    "대국이 끝나 훈수를 받을 수 없습니다.": ["The game is over, so no hints.", "対局が終わったためヒントは使えません。", "对局已结束，无法提示。", "Партия окончена — подсказок нет.", "La partie est finie : pas de conseil.", "Die Partie ist vorbei – keine Tipps."],
+    "내 차례에 훈수를 받을 수 있습니다.": ["Hints are available on your turn.", "自分の番にヒントを使えます。", "轮到你时才能获取提示。", "Подсказка доступна в ваш ход.", "Conseil disponible à votre tour.", "Tipps gibt es, wenn du am Zug bist."],
+    "AI가 추천 수를 찾는 중입니다.": ["The AI is looking for a move.", "AIがおすすめの手を探しています。", "AI 正在寻找推荐着法。", "ИИ ищет ход.", "L’IA cherche un coup.", "Die KI sucht einen Zug."],
+    "AI가 추천 수를 찾는 중…": ["The AI is looking for a move…", "AIがおすすめの手を探しています…", "AI 正在寻找推荐着法…", "ИИ ищет ход…", "L’IA cherche un coup…", "Die KI sucht einen Zug…"],
+    "💡 AI 훈수": ["💡 AI Hint", "💡 AIヒント", "💡 AI 提示", "💡 Подсказка ИИ", "💡 Conseil de l’IA", "💡 KI-Tipp"],
+    "🎬 광고 보고 훈수 받기": ["🎬 Watch an ad for a hint", "🎬 広告を見てヒント", "🎬 看广告获取提示", "🎬 Подсказка за просмотр рекламы", "🎬 Un conseil contre une pub", "🎬 Tipp gegen Werbung"],
+    "지금은 둘 만한 자리가 마땅치 않습니다. 패스도 생각해 보세요.": ["No clearly good move right now. Consider passing.", "今は良い手が見当たりません。パスも考えてみましょう。", "目前没有合适的着点，也可以考虑停一手。", "Хорошего хода сейчас нет. Подумайте о пасе.", "Aucun bon coup évident. Envisagez de passer.", "Gerade kein guter Zug. Denk über Passen nach."],
+    "🎉 승리! 친구에게 자랑해 보세요": ["🎉 You won! Show your friends", "🎉 勝利！友達に自慢しよう", "🎉 胜利！分享给朋友吧", "🎉 Победа! Покажите друзьям", "🎉 Victoire ! Montrez-la", "🎉 Gewonnen! Zeig es Freunden"],
+    "🎉 정답! 친구에게 자랑해 보세요": ["🎉 Solved! Show your friends", "🎉 正解！友達に自慢しよう", "🎉 答对了！分享给朋友吧", "🎉 Решено! Покажите друзьям", "🎉 Résolu ! Montrez-le", "🎉 Gelöst! Zeig es Freunden"],
+    "📤 자랑하기": ["📤 Share", "📤 自慢する", "📤 炫耀一下", "📤 Поделиться", "📤 Partager", "📤 Teilen"],
+    "카드를 만드는 중…": ["Making your card…", "カードを作成中…", "正在生成卡片…", "Создаём карточку…", "Création de la carte…", "Karte wird erstellt…"],
+    "📤 공유하기": ["📤 Share", "📤 共有", "📤 分享", "📤 Поделиться", "📤 Partager", "📤 Teilen"],
+    "🔗 글 복사": ["🔗 Copy text", "🔗 文をコピー", "🔗 复制文字", "🔗 Копировать текст", "🔗 Copier le texte", "🔗 Text kopieren"],
+    "공유 글을 복사했습니다. 카카오톡이나 SNS에 붙여 넣으세요.": ["Text copied. Paste it into any messenger or social app.", "共有文をコピーしました。メッセージやSNSに貼り付けてください。", "已复制分享文字，请粘贴到聊天或社交软件。", "Текст скопирован. Вставьте его в мессенджер или соцсеть.", "Texte copié. Collez-le dans une messagerie ou un réseau social.", "Text kopiert. Füge ihn in einen Messenger oder ein soziales Netzwerk ein."],
+    "이 기기에서는 화면을 캡처하지 못해 글만 공유합니다.": ["This device can’t capture the board, so only text will be shared.", "この端末では画面を取り込めないため、文のみ共有します。", "此设备无法截取画面，仅分享文字。", "На этом устройстве нельзя снять доску — поделимся только текстом.", "Capture impossible sur cet appareil : seul le texte sera partagé.", "Auf diesem Gerät kein Bildschirmfoto möglich – nur Text wird geteilt."],
+    "📤 결과 자랑하기": ["📤 Share result", "📤 結果を自慢", "📤 分享结果", "📤 Поделиться итогом", "📤 Partager le résultat", "📤 Ergebnis teilen"],
+    "이긴 대국(AI 도전·웹대국)만 자랑할 수 있습니다.": ["Only won games (AI or online) can be shared.", "勝った対局（AI・Web対局）のみ共有できます。", "只能分享获胜的对局（AI 或网络）。", "Делиться можно только выигранными партиями (ИИ или онлайн).", "Seules les parties gagnées (IA ou en ligne) peuvent être partagées.", "Nur gewonnene Partien (KI oder online) können geteilt werden."],
+    "기본 무광": ["Classic matte", "標準マット", "经典哑光", "Классика (мат)", "Classique mat", "Klassisch matt"],
+    "옥돌": ["Jade", "翡翠", "玉石", "Нефрит", "Jade", "Jade"],
+    "자개": ["Mother-of-pearl", "螺鈿", "螺钿", "Перламутр", "Nacre", "Perlmutt"],
+    "흑요석 · 황금돌": ["Obsidian · Gold", "黒曜石・金石", "黑曜石 · 黄金子", "Обсидиан · Золото", "Obsidienne · Or", "Obsidian · Gold"],
+    "사용 중": ["In use", "使用中", "使用中", "Выбрано", "Utilisé", "Aktiv"],
+    "사용": ["Use", "使う", "使用", "Выбрать", "Utiliser", "Nutzen"],
+    "💎 여의주 상점": ["💎 Pearl Shop", "💎 如意珠ショップ", "💎 如意珠商店", "💎 Лавка жемчужин", "💎 Boutique de perles", "💎 Perlen-Laden"],
+    "돌 스킨": ["Stone skins", "石のスキン", "棋子皮肤", "Облик камней", "Apparence des pierres", "Stein-Designs"],
+    "광고": ["Ads", "広告", "广告", "Реклама", "Publicité", "Werbung"],
+    "✓ 광고 제거됨": ["✓ Ads removed", "✓ 広告削除済み", "✓ 已移除广告", "✓ Реклама отключена", "✓ Pubs supprimées", "✓ Werbung entfernt"],
+    "구매 복원": ["Restore purchases", "購入を復元", "恢复购买", "Восстановить покупки", "Restaurer les achats", "Käufe wiederherstellen"],
+    "기록 지키기": ["Keep your records", "記録を守る", "保护记录", "Сохранность записей", "Protéger vos données", "Daten sichern"],
+    "🏆 순위표": ["🏆 Leaderboard", "🏆 ランキング", "🏆 排行榜", "🏆 Рейтинг", "🏆 Classement", "🏆 Bestenliste"],
+    "☁️ 클라우드에 저장": ["☁️ Save to cloud", "☁️ クラウドに保存", "☁️ 保存到云端", "☁️ В облако", "☁️ Sauvegarder dans le cloud", "☁️ In der Cloud sichern"],
+    "☁️ 클라우드에서 불러오기": ["☁️ Load from cloud", "☁️ クラウドから読込", "☁️ 从云端读取", "☁️ Из облака", "☁️ Charger depuis le cloud", "☁️ Aus der Cloud laden"],
+    "📋 백업 코드 복사": ["📋 Copy backup code", "📋 バックアップコードをコピー", "📋 复制备份代码", "📋 Скопировать код резервной копии", "📋 Copier le code de sauvegarde", "📋 Sicherungscode kopieren"],
+    "📥 백업 코드로 복원": ["📥 Restore from code", "📥 コードから復元", "📥 用代码恢复", "📥 Восстановить из кода", "📥 Restaurer depuis un code", "📥 Aus Code wiederherstellen"],
+    "휴대폰을 바꾸거나 앱을 지우기 전에 백업 코드를 복사해 두면 등급·승률·여의주를 그대로 옮길 수 있습니다.": ["Copy your backup code before changing phones or uninstalling to keep your rank, records and pearls.", "機種変更やアプリ削除の前にバックアップコードをコピーすれば、段級・勝率・如意珠をそのまま移せます。", "换手机或卸载前复制备份代码，即可保留等级、胜率和如意珠。", "Скопируйте код перед сменой телефона или удалением — ранг, статистика и жемчужины сохранятся.", "Copiez votre code avant de changer de téléphone ou de désinstaller pour garder rang, statistiques et perles.", "Kopiere den Code vor einem Handywechsel oder Deinstallieren, um Rang, Statistik und Perlen zu behalten."],
+    "사기": ["Buy", "買う", "购买", "Купить", "Acheter", "Kaufen"],
+    "테스트 결제입니다 (실제 결제 아님). 광고 제거를 적용할까요?": ["This is a test purchase (no real payment). Apply ad removal?", "テスト購入です（実際の支払いなし）。広告削除を適用しますか？", "这是测试购买（不实际付款）。要移除广告吗？", "Это тестовая покупка (без оплаты). Отключить рекламу?", "Achat de test (aucun paiement réel). Supprimer les pubs ?", "Testkauf (keine echte Zahlung). Werbung entfernen?"],
+    "적용": ["Apply", "適用", "应用", "Применить", "Appliquer", "Anwenden"],
+    "광고 제거가 적용되었습니다. 고맙습니다!": ["Ads removed. Thank you!", "広告を削除しました。ありがとうございます！", "已移除广告，谢谢支持！", "Реклама отключена. Спасибо!", "Pubs supprimées. Merci !", "Werbung entfernt. Danke!"],
+    "결제가 완료되지 않았습니다.": ["The purchase was not completed.", "購入は完了しませんでした。", "购买未完成。", "Покупка не завершена.", "L’achat n’a pas abouti.", "Der Kauf wurde nicht abgeschlossen."],
+    "구매 내역을 복원했습니다.": ["Purchases restored.", "購入を復元しました。", "已恢复购买。", "Покупки восстановлены.", "Achats restaurés.", "Käufe wiederhergestellt."],
+    "복원할 구매 내역이 없습니다.": ["No purchases to restore.", "復元できる購入はありません。", "没有可恢复的购买。", "Нет покупок для восстановления.", "Aucun achat à restaurer.", "Keine Käufe zum Wiederherstellen."],
+    "클라우드에 저장했습니다.": ["Saved to the cloud.", "クラウドに保存しました。", "已保存到云端。", "Сохранено в облаке.", "Sauvegardé dans le cloud.", "In der Cloud gesichert."],
+    "클라우드 저장에 실패했습니다.": ["Cloud save failed.", "クラウド保存に失敗しました。", "云端保存失败。", "Не удалось сохранить в облако.", "Échec de la sauvegarde cloud.", "Cloud-Sicherung fehlgeschlagen."],
+    "클라우드에 저장된 기록이 없습니다.": ["No cloud save found.", "クラウドに保存された記録はありません。", "云端没有保存的记录。", "В облаке нет сохранений.", "Aucune sauvegarde cloud.", "Keine Cloud-Sicherung gefunden."],
+    "백업 코드를 복사했습니다. 메모나 메시지에 붙여 넣어 보관하세요.": ["Backup code copied. Paste it into a note or message to keep it.", "バックアップコードをコピーしました。メモなどに貼り付けて保管してください。", "已复制备份代码，请粘贴到备忘录或消息中保存。", "Код скопирован. Сохраните его в заметках или сообщении.", "Code copié. Collez-le dans une note ou un message pour le garder.", "Code kopiert. Bewahre ihn in einer Notiz oder Nachricht auf."],
+    "복사해 둔 백업 코드(HG1.로 시작)를 붙여 넣으세요. 이 기기의 지금 기록은 백업 코드의 기록으로 바뀝니다.": ["Paste your backup code (starts with HG1.). This device’s current records will be replaced.", "保存したバックアップコード（HG1.で始まる）を貼り付けてください。この端末の記録は置き換わります。", "请粘贴备份代码（以 HG1. 开头）。本设备当前记录将被替换。", "Вставьте код (начинается с HG1.). Текущие записи на устройстве будут заменены.", "Collez votre code (commence par HG1.). Les données actuelles seront remplacées.", "Füge deinen Code ein (beginnt mit HG1.). Die aktuellen Daten werden ersetzt."],
+    "복원": ["Restore", "復元", "恢复", "Восстановить", "Restaurer", "Wiederherstellen"],
+    "백업 코드가 올바르지 않습니다.": ["That backup code isn’t valid.", "バックアップコードが正しくありません。", "备份代码无效。", "Неверный код.", "Code de sauvegarde invalide.", "Ungültiger Sicherungscode."],
+    "이 기기의 기록을 백업 코드의 기록으로 바꿀까요? 지금 기록은 덮어씁니다.": ["Replace this device’s records with the backup? Current records will be overwritten.", "この端末の記録をバックアップで置き換えますか？今の記録は上書きされます。", "用备份替换本设备的记录吗？当前记录将被覆盖。", "Заменить записи на устройстве резервной копией? Текущие будут перезаписаны.", "Remplacer les données de cet appareil par la sauvegarde ? Elles seront écrasées.", "Daten dieses Geräts durch die Sicherung ersetzen? Sie werden überschrieben."],
+    "이 환경에서는 기록을 저장할 수 없습니다.": ["Records can’t be saved in this environment.", "この環境では記録を保存できません。", "此环境无法保存记录。", "Здесь нельзя сохранять записи.", "Impossible d’enregistrer ici.", "Speichern ist hier nicht möglich."],
+    "복원했습니다. 다시 시작합니다.": ["Restored. Restarting…", "復元しました。再起動します。", "已恢复，正在重新启动。", "Восстановлено. Перезапуск…", "Restauré. Redémarrage…", "Wiederhergestellt. Neustart…"],
+    "온라인 대국 중에는 사활 문제를 풀 수 없습니다.": ["Puzzles aren’t available during an online game.", "オンライン対局中は詰碁を解けません。", "在线对局中无法做死活题。", "Во время онлайн-партии задачи недоступны.", "Pas de problèmes pendant une partie en ligne.", "Während einer Online-Partie keine Aufgaben."],
+    "진행 중인 대국을 지우고 사활 문제를 풀까요?": ["Clear the current game and open the puzzle?", "進行中の対局を消して詰碁を解きますか？", "清除当前对局并开始做题吗？", "Сбросить текущую партию и открыть задачу?", "Effacer la partie en cours et ouvrir le problème ?", "Laufende Partie löschen und Aufgabe öffnen?"],
+    "풀기": ["Solve", "解く", "开始", "Решать", "Résoudre", "Lösen"],
+    "문제를 준비하는 중…": ["Preparing the puzzle…", "問題を準備中…", "正在准备题目…", "Готовим задачу…", "Préparation du problème…", "Aufgabe wird vorbereitet…"],
+    "문제를 만들지 못했습니다. 연습 문제를 풀어 보세요.": ["Couldn’t create the puzzle. Try a practice puzzle.", "問題を作れませんでした。練習問題を解いてみてください。", "无法生成题目，请试试练习题。", "Не удалось создать задачу. Попробуйте тренировочную.", "Impossible de créer le problème. Essayez un exercice.", "Aufgabe konnte nicht erstellt werden. Versuche eine Übung."],
+    "오늘의 사활": ["Daily puzzle", "今日の詰碁", "今日死活", "Задача дня", "Problème du jour", "Tagesaufgabe"],
+    "따내기": ["Capture", "取る", "提子", "Взятие", "Capture", "Schlagen"],
+    "단수 탈출": ["Escape atari", "アタリ脱出", "逃出叫吃", "Из атари", "Sortir d’atari", "Atari-Flucht"],
+    "✅ 정답!": ["✅ Correct!", "✅ 正解！", "✅ 正确！", "✅ Верно!", "✅ Bravo !", "✅ Richtig!"],
+    "❌ 아쉽습니다. 처음 모양으로 되돌립니다 — 다시 생각해 보세요.": ["❌ Not quite. Resetting the position — think again.", "❌ 残念。最初の形に戻します — もう一度考えてみましょう。", "❌ 可惜，恢复初始局面，再想想。", "❌ Не то. Возвращаем позицию — подумайте ещё.", "❌ Raté. Retour à la position de départ — réfléchissez encore.", "❌ Leider nicht. Zurück zur Ausgangsstellung – denk nochmal nach."],
+    "연습 문제 ▶": ["Practice ▶", "練習問題 ▶", "练习题 ▶", "Тренировка ▶", "Exercices ▶", "Übungen ▶"],
+    "다음 문제 ▶": ["Next puzzle ▶", "次の問題 ▶", "下一题 ▶", "Следующая ▶", "Problème suivant ▶", "Nächste Aufgabe ▶"],
+    "완료 🎉": ["Done 🎉", "完了 🎉", "完成 🎉", "Готово 🎉", "Terminé 🎉", "Fertig 🎉"],
+    "정답입니다! ‘다음 문제’를 누르거나 ✕로 닫으세요.": ["Correct! Tap ‘Next puzzle’ or close with ✕.", "正解です！「次の問題」を押すか ✕ で閉じてください。", "正确！请点“下一题”或按 ✕ 关闭。", "Верно! Нажмите «Следующая» или закройте ✕.", "Bravo ! Touchez « Problème suivant » ou fermez avec ✕.", "Richtig! Tippe auf „Nächste Aufgabe“ oder schließe mit ✕."],
+    "처음 모양으로 되돌리는 중입니다.": ["Resetting the position…", "最初の形に戻しています。", "正在恢复初始局面。", "Возвращаем позицию…", "Retour à la position de départ…", "Stellung wird zurückgesetzt…"],
+    "연습 문제를 모두 풀었습니다! 🎉": ["You’ve solved every practice puzzle! 🎉", "練習問題をすべて解きました！🎉", "你已完成全部练习题！🎉", "Все тренировочные задачи решены! 🎉", "Tous les exercices sont résolus ! 🎉", "Alle Übungen gelöst! 🎉"],
+    "🧩 공간사활": ["🧩 Space Puzzles", "🧩 空間詰碁", "🧩 空间死活", "🧩 Задачи", "🧩 Problèmes", "🧩 Aufgaben"],
+    "오늘의 공간사활": ["Today’s Space Puzzle", "今日の空間詰碁", "今日空间死活", "Задача дня", "Problème du jour", "Tagesaufgabe"],
+    "✓ 오늘 문제를 풀었습니다. 내일 새 문제가 나옵니다.": ["✓ Solved today. A new puzzle arrives tomorrow.", "✓ 今日の問題を解きました。明日新しい問題が出ます。", "✓ 今日题目已完成，明天会有新题。", "✓ Решено. Новая задача — завтра.", "✓ Résolu aujourd’hui. Nouveau problème demain.", "✓ Heute gelöst. Morgen kommt eine neue Aufgabe."],
+    "다시 풀기": ["Solve again", "もう一度解く", "再做一次", "Решить снова", "Refaire", "Nochmal lösen"],
+    "오늘 문제 풀기": ["Solve today’s puzzle", "今日の問題を解く", "做今日题目", "Решить задачу дня", "Résoudre le problème du jour", "Tagesaufgabe lösen"],
+    "연습 문제": ["Practice puzzles", "練習問題", "练习题", "Тренировочные задачи", "Exercices", "Übungsaufgaben"],
+    "1번부터": ["From #1", "1番から", "从第1题", "С №1", "Depuis le n° 1", "Ab Nr. 1"],
+    "모든 문제는 규칙 엔진으로 ‘정답이 한 자리뿐’인지 확인해 자동으로 만든 1수 문제입니다.": ["Every puzzle is generated automatically and checked by the rules engine to have exactly one correct move.", "すべての問題はルールエンジンで「正解が1か所だけ」と確認して自動生成した1手問題です。", "所有题目均自动生成，并经规则引擎验证只有唯一正解。", "Все задачи создаются автоматически и проверяются движком правил: верный ход ровно один.", "Chaque problème est généré automatiquement et vérifié : il n’a qu’un seul bon coup.", "Alle Aufgaben werden automatisch erzeugt und geprüft: genau ein richtiger Zug."],
+    "사활": ["Puzzles", "詰碁", "死活", "Задачи", "Problèmes", "Aufgaben"],
+    "상점": ["Shop", "ショップ", "商店", "Лавка", "Boutique", "Laden"],
+    "지금은 기다리는 사람이 없어 AI 연습 상대와 대국합니다. 웹대국 레이팅에는 반영되지 않습니다.": ["No one is waiting right now, so you’re playing an AI practice opponent. This won’t affect your online rating.", "今は待っている人がいないため、AI練習相手と対局します。Web対局のレーティングには反映されません。", "目前没有人在等待，将与 AI 练习对手对局，不计入网络积分。", "Сейчас никто не ждёт — играем с тренировочным ИИ. На онлайн-рейтинг не влияет.", "Personne n’attend : vous jouez contre une IA d’entraînement. Sans effet sur votre classement en ligne.", "Gerade wartet niemand – du spielst gegen eine Übungs-KI. Keine Auswirkung auf deine Online-Wertung."],
+    "AI 연습 상대": ["AI practice opponent", "AI練習相手", "AI 练习对手", "Тренировочный ИИ", "IA d’entraînement", "Übungs-KI"],
+    "판 고르기": ["Choose board", "盤を選ぶ", "选择棋盘", "Выбор доски", "Choisir le plateau", "Brett wählen"],
+    "인증": ["Pass", "認証", "认证", "Пропуск", "Pass", "Pass"],
+    "🔑 패스·교구 인증": ["🔑 Pass & Kit Code", "🔑 パス・教具認証", "🔑 通行证 · 教具认证", "🔑 Пропуск и код набора", "🔑 Pass et code du kit", "🔑 Pass & Kit-Code"],
+    "⭐ 마스터 멤버십": ["⭐ Master Membership", "⭐ マスター会員", "⭐ 大师会员", "⭐ Мастер-доступ", "⭐ Abonnement Maître", "⭐ Master-Mitgliedschaft"],
+    "무료 이용 중": ["Free plan", "無料プラン", "免费版", "Бесплатно", "Gratuit", "Kostenlos"],
+    "AI 훈수 무제한": ["Unlimited AI hints", "AIヒント無制限", "AI 提示无限次", "Безлимитные подсказки", "Conseils IA illimités", "Unbegrenzte KI-Tipps"],
+    "AI 도전 무르기 무제한": ["Unlimited undo vs AI", "AI対局の待った無制限", "AI 对局无限悔棋", "Безлимитная отмена", "Annulations illimitées", "Unbegrenztes Zurücknehmen"],
+    "전면 광고 없음": ["No full-screen ads", "全画面広告なし", "无全屏广告", "Без полноэкранной рекламы", "Sans pubs plein écran", "Keine Vollbildwerbung"],
+    "공간 두뇌 발달 지수 리포트": ["Spatial brain index report", "空間脳発達指数レポート", "空间脑力指数报告", "Отчёт о пространственном мышлении", "Rapport d’indice spatial", "Bericht zum Raumdenken"],
+    "교구·기관 코드": ["Kit / school code", "教具・機関コード", "教具 / 机构代码", "Код набора / школы", "Code kit / école", "Kit- / Schulcode"],
+    "공간바둑 교구 상자나 학교·기관에서 받은 코드(HGL1-로 시작)를 붙여 넣으세요. 상자의 QR 코드를 찍으면 자동으로 채워집니다.": ["Paste the code (starts with HGL1-) from your Space Go kit box or your school. Scanning the QR code on the box fills it in automatically."],
+    "인증하기": ["Activate", "認証する", "激活", "Активировать", "Activer", "Aktivieren"],
+    "프리미엄 구독": ["Premium subscription", "プレミアム購読", "高级订阅", "Премиум-подписка", "Abonnement premium", "Premium-Abo"],
+    "월간 구독": ["Monthly", "月額", "按月", "Ежемесячно", "Mensuel", "Monatlich"],
+    "연간 구독": ["Yearly", "年額", "按年", "Ежегодно", "Annuel", "Jährlich"],
+    "구독은 Google Play에서 관리·해지할 수 있습니다.": ["Manage or cancel your subscription in Google Play.", "購読はGoogle Playで管理・解約できます。", "可在 Google Play 管理或取消订阅。"],
+    "⭐ 멤버십이면 훈수·무르기 무제한": ["⭐ Members get unlimited hints and undo", "⭐ 会員はヒント・待った無制限", "⭐ 会员提示与悔棋无限次"],
+    "코드를 붙여 넣으세요.": ["Paste a code.", "コードを貼り付けてください。", "请粘贴代码。"],
+    "올바른 코드가 아닙니다. 빠진 글자가 없는지 확인하세요.": ["That code isn’t valid. Check for missing characters.", "正しいコードではありません。文字の抜けを確認してください。", "代码无效，请检查是否缺少字符。"],
+    "기한이 지난 코드입니다.": ["This code has expired.", "期限切れのコードです。", "该代码已过期。"],
+    "기한 없음": ["No expiry", "期限なし", "无期限"],
+    "구독 중": ["Subscribed", "購読中", "订阅中"],
+    "🧠 공간 두뇌 발달 지수": ["🧠 Spatial Brain Index", "🧠 空間脳発達指数", "🧠 空间脑力指数"],
+    "공간지각력": ["Spatial sense", "空間認知力", "空间感知"],
+    "수읽기 속도": ["Reading speed", "読みの速さ", "计算速度"],
+    "수비·사활력": ["Defense & life", "守り・死活力", "防守与死活"],
+    "기록 부족": ["Not enough data", "記録不足", "记录不足"], "우수": ["Excellent", "優秀", "优秀"], "좋음": ["Good", "良い", "良好"], "보통": ["Average", "普通", "一般"], "기초": ["Basic", "基礎", "基础"],
+    "계산 방법": ["How it’s calculated", "計算方法", "计算方法"],
+    "게임 기록으로 계산한 참고 지표입니다. 의학·심리 검사나 학습 효과를 증명하는 수치가 아닙니다.": ["A reference indicator calculated from game records. It is not a medical or psychological test and does not prove learning effects.", "ゲーム記録から計算した参考指標です。医学・心理検査や学習効果を証明する数値ではありません。", "根据游戏记录计算的参考指标，并非医学或心理测试，也不证明学习效果。"],
+    "📤 리포트 공유": ["📤 Share report", "📤 レポート共有", "📤 分享报告"],
+    "🎓 급수·단증 발급 신청": ["🎓 Apply for a rank certificate", "🎓 段級位証の申請", "🎓 申请段级证书"],
+    "이름 (급수증에 적힐 이름)": ["Name (as printed on the certificate)"], "소속 기관 (선택)": ["School / organization (optional)"],
+    "연락 이메일 (만 14세 미만은 보호자 이메일)": ["Contact email (a guardian’s email if under 14)"],
+    "📧 이메일로 신청": ["📧 Apply by email"], "📋 신청서 복사": ["📋 Copy application"],
+    "등급은 이 기기의 기록이라, 운영자가 확인 대국(온라인 등)으로 실력을 확인한 뒤 발급합니다.": ["Ranks are stored on this device, so the operator confirms your level with a verification game (e.g. online) before issuing."],
+    "이름과 올바른 이메일을 적어 주세요.": ["Please enter your name and a valid email."], "개인정보 제공에 동의해야 신청할 수 있습니다.": ["You must agree to share your details to apply."],
+    "신청서를 복사했습니다. 운영자 안내에 따라 보내 주세요.": ["Application copied. Send it as the operator instructs."],
+    "리포트를 복사했습니다. 메시지에 붙여 넣어 보내세요.": ["Report copied. Paste it into a message."],
+    "아직 신청할 수 있는 등급이 아닙니다.": ["You haven’t reached an eligible rank yet."],
+    "테스트 구독입니다 (실제 결제 아님). 멤버십을 적용할까요?": ["This is a test subscription (no real payment). Apply membership?"],
+    "⭐ 프리미엄 구독이 시작되었습니다. 고맙습니다!": ["⭐ Your premium subscription has started. Thank you!"],
+    "멤버십 기한이 끝났습니다. 새 코드나 구독으로 이어 갈 수 있습니다.": ["Your membership has expired. Continue with a new code or a subscription."],
+    "이 환경에서는 코드를 확인할 수 없습니다 (보안 연결 필요).": ["Codes can’t be checked here (a secure connection is required)."],
+    "급수증 발급을 위해 이름·소속·이메일·대국 기록을 운영자에게 보내는 데 동의합니다. (발급 확인 후 1년 보관 뒤 삭제)": ["I agree to send my name, organization, email and game records to the operator to issue the certificate (kept for 1 year after issuing, then deleted)."],
+    "AI 훈수: 고급 AI가 추천하는 다음 수를 3D 큐브 위에 보여 줍니다 (H)": ["AI hint: shows the advanced AI’s suggested move on the 3D cube (H)", "AIヒント：上級AIのおすすめの手を3Dキューブに表示 (H)", "AI 提示：在 3D 立方体上显示高级 AI 推荐的着点 (H)"],
+    "수읽기 집중력": ["Reading focus", "読みの集中力", "计算专注力"],
+    "사활 계산력": ["Life & death calc", "死活の計算力", "死活计算力"],
+    "🎓 급수·단증 발급 안내": ["🎓 Rank certificate info", "🎓 段級位証の案内", "🎓 段级证书说明"],
+    "🎓 급수·단증 발급 신청": ["🎓 Apply for a rank certificate", "🎓 段級位証の申請", "🎓 申请段级证书"],
+    "🔒 개인정보처리방침": ["🔒 Privacy Policy", "🔒 プライバシーポリシー", "🔒 隐私政策"],
+    "개인정보처리방침": ["Privacy Policy", "プライバシーポリシー", "隐私政策", "Политика конфиденциальности", "Politique de confidentialité", "Datenschutzerklärung"],
+    "🌐 웹에서 전체 보기": ["🌐 View full policy online", "🌐 ウェブで全文を見る", "🌐 在网页查看全文"],
+    "AI 훈수": ["AI hint", "AIヒント", "AI 提示"],
+    "사람만 기다리기": ["Wait for a human only", "人間だけを待つ", "只等真人", "Ждать только человека", "Attendre un humain", "Nur auf Menschen warten"],
+    "사람 상대를 기다리는 중…": ["Waiting for a human opponent…", "人間の相手を待っています…", "正在等待真人对手…", "Ждём соперника-человека…", "En attente d’un adversaire humain…", "Warte auf einen menschlichen Gegner…"],
+    "잠시 기다려도 상대가 없으면 AI 연습 상대와 바로 시작합니다": ["If no one shows up shortly, you’ll start right away against an AI practice opponent", "しばらく待っても相手がいなければ、AI練習相手とすぐ始めます", "稍等仍无对手时，将立即与 AI 练习对手开始", "Если соперник не найдётся, сразу начнём с тренировочным ИИ", "Si personne ne vient, vous jouerez aussitôt contre une IA d’entraînement", "Kommt niemand, startest du sofort gegen eine Übungs-KI"],
+    "훈수": ["Hint", "ヒント", "提示", "Совет", "Conseil", "Tipp"],
+    "AI 훈수": ["AI hint", "AIヒント", "AI 提示", "Подсказка ИИ", "Conseil de l’IA", "KI-Tipp"],
+    "AI 훈수: 고급 AI가 추천하는 다음 수를 노란 점으로 보여 줍니다": ["AI hint: the advanced AI marks its suggested move with a yellow dot", "AIヒント：上級AIのおすすめの手を黄色い点で示します", "AI 提示：高级 AI 用黄点标出推荐着法", "Подсказка: сильный ИИ отметит рекомендуемый ход жёлтой точкой", "Conseil : l’IA avancée marque le coup suggéré d’un point jaune", "KI-Tipp: Die starke KI markiert ihren Vorschlag mit einem gelben Punkt"]
+  };
+  const L = (i, a) => a[i] != null ? a[i] : a[0];
+  const SK = { "기본 무광": 0, "옥돌": 1, "자개": 2, "흑요석 · 황금돌": 3 };
+  const skin = (n, i) => (T[n] ? L(i, T[n]) : n);
+  const P = [
+    [/^AI 추천 수: (\d+)층 (\d+)열 (\d+)행 \(노란 점\) · 한 번 더 누르면 착수$/, (m, i) => L(i, [`AI suggests: layer ${m[1]}, column ${m[2]}, row ${m[3]} (yellow dot) · tap again to play`, `AIのおすすめ：${m[1]}層 ${m[2]}列 ${m[3]}行（黄色い点）・もう一度押すと着手`, `AI 推荐：第${m[1]}层 ${m[2]}列 ${m[3]}行（黄点）· 再点一次落子`])],
+    [/^(\d{4}-\d\d-\d\d)까지$/, (m, i) => L(i, [`until ${m[1]}`, `${m[1]}まで`, `至 ${m[1]}`])],
+    [/^⭐ 마스터 멤버십이 열렸습니다 \((.+) · (.+)\)$/, (m, i) => L(i, [`⭐ Master membership unlocked (${m[2]})`, `⭐ マスター会員が有効になりました（${m[2]}）`, `⭐ 已开通大师会员（${m[2]}）`])],
+    [/^AI 도전 착수 (\d+)수 · 공간사활 (\d+)문제 기준$/, (m, i) => L(i, [`Based on ${m[1]} moves vs AI and ${m[2]} puzzles`, `AI対局${m[1]}手・空間詰碁${m[2]}問に基づく`, `基于 AI 对局 ${m[1]} 手 · 死活题 ${m[2]} 题`])],
+    [/^💎 여의주 (\d+)개로 무르기$/, (m, i) => L(i, [`💎 Undo for ${m[1]} pearl(s)`, `💎 如意珠${m[1]}個で待った`, `💎 用${m[1]}颗如意珠悔棋`, `💎 Отменить за ${m[1]} жемч.`, `💎 Annuler pour ${m[1]} perle(s)`, `💎 Für ${m[1]} Perle(n) zurücknehmen`])],
+    [/^💎 여의주 (\d+)개로 훈수 받기$/, (m, i) => L(i, [`💎 Hint for ${m[1]} pearls`, `💎 如意珠${m[1]}個でヒント`, `💎 用${m[1]}颗如意珠获取提示`, `💎 Подсказка за ${m[1]} жемч.`, `💎 Conseil pour ${m[1]} perles`, `💎 Tipp für ${m[1]} Perlen`])],
+    [/^AI 추천 수: (\d+)층 (\d+)열 (\d+)행 \(노란 점\)$/, (m, i) => L(i, [`AI suggests: layer ${m[1]}, column ${m[2]}, row ${m[3]} (yellow dot)`, `AIのおすすめ：${m[1]}層 ${m[2]}列 ${m[3]}行（黄色い点）`, `AI 推荐：第${m[1]}层 ${m[2]}列 ${m[3]}行（黄点）`, `ИИ советует: слой ${m[1]}, столбец ${m[2]}, ряд ${m[3]} (жёлтая точка)`, `L’IA suggère : couche ${m[1]}, colonne ${m[2]}, rangée ${m[3]} (point jaune)`, `KI-Vorschlag: Ebene ${m[1]}, Spalte ${m[2]}, Reihe ${m[3]} (gelber Punkt)`])],
+    [/^고급 AI가 지금 판에서 가장 좋다고 보는 수를 노란 점으로 알려 줍니다\. 이번 판의 무료 훈수를 썼습니다 \(판마다 (\d+)번 무료\)\.$/, (m, i) => L(i, [`The advanced AI marks the move it rates best with a yellow dot. You’ve used this game’s free hint (${m[1]} free per game).`, `上級AIが最善と見る手を黄色い点で示します。この対局の無料ヒントを使いました（1局${m[1]}回無料）。`, `高级 AI 会用黄点标出它认为最好的着法。本局免费提示已用完（每局 ${m[1]} 次）。`])],
+    [/^고급 AI가 지금 판에서 가장 좋다고 보는 수를 노란 점으로 알려 줍니다\. 오늘의 무료 훈수를 모두 썼습니다 \(매일 (\d+)번 무료\)\.$/, (m, i) => L(i, [`The advanced AI marks the move it rates best with a yellow dot. You’ve used today’s free hints (${m[1]} free per day).`, `上級AIが最善と見る手を黄色い点で示します。今日の無料ヒントを使い切りました（毎日${m[1]}回無料）。`, `高级 AI 会用黄点标出它认为最好的着法。今日免费提示已用完（每天 ${m[1]} 次）。`, `Сильный ИИ отметит лучший, по его мнению, ход жёлтой точкой. Бесплатные подсказки на сегодня закончились (${m[1]} в день).`, `L’IA avancée marque d’un point jaune le coup qu’elle juge le meilleur. Conseils gratuits du jour épuisés (${m[1]} par jour).`, `Die starke KI markiert den besten Zug mit einem gelben Punkt. Die Gratis-Tipps für heute sind verbraucht (${m[1]} pro Tag).`])],
+    [/^여의주 \+(\d+)$/, (m, i) => L(i, [`Pearls +${m[1]}`, `如意珠 +${m[1]}`, `如意珠 +${m[1]}`, `Жемчужины +${m[1]}`, `Perles +${m[1]}`, `Perlen +${m[1]}`])],
+    [/^모으는 법: AI 도전 승리 \+(\d+) \(고급 \+(\d+)\) · 대국 완료 \+(\d+) · 오늘의 공간사활 \+(\d+)$/, (m, i) => L(i, [`How to earn: AI win +${m[1]} (Advanced +${m[2]}) · finished game +${m[3]} · daily puzzle +${m[4]}`, `集め方：AI対局の勝利 +${m[1]}（上級 +${m[2]}）・対局終了 +${m[3]}・今日の空間詰碁 +${m[4]}`, `获取方式：战胜 AI +${m[1]}（高级 +${m[2]}）· 完成对局 +${m[3]} · 今日死活 +${m[4]}`, `Как получить: победа над ИИ +${m[1]} (сильный +${m[2]}) · сыгранная партия +${m[3]} · задача дня +${m[4]}`, `Comment gagner : victoire contre l’IA +${m[1]} (avancé +${m[2]}) · partie terminée +${m[3]} · problème du jour +${m[4]}`, `So verdienst du: Sieg gegen KI +${m[1]} (stark +${m[2]}) · beendete Partie +${m[3]} · Tagesaufgabe +${m[4]}`])],
+    [/^🎬 광고 보고 여의주 \+(\d+) \(오늘 (\d+)번 남음\)$/, (m, i) => L(i, [`🎬 Watch an ad: pearls +${m[1]} (${m[2]} left today)`, `🎬 広告を見て如意珠 +${m[1]}（今日あと${m[2]}回）`, `🎬 看广告得如意珠 +${m[1]}（今天还剩 ${m[2]} 次）`, `🎬 Реклама: жемчужины +${m[1]} (сегодня ещё ${m[2]})`, `🎬 Pub : perles +${m[1]} (encore ${m[2]} aujourd’hui)`, `🎬 Werbung: Perlen +${m[1]} (heute noch ${m[2]})`])],
+    [/^🚫 광고 제거( · .+)?$/, (m, i) => L(i, ["🚫 Remove ads", "🚫 広告を削除", "🚫 移除广告", "🚫 Убрать рекламу", "🚫 Supprimer les pubs", "🚫 Werbung entfernen"]) + (m[1] || "")],
+    [/^(.+) 스킨을 여의주 (\d+)개로 살까요\?$/, (m, i) => L(i, [`Buy the ${skin(m[1], 0)} skin for ${m[2]} pearls?`, `${skin(m[1], 1)}スキンを如意珠${m[2]}個で買いますか？`, `用${m[2]}颗如意珠购买${skin(m[1], 2)}皮肤吗？`, `Купить облик «${skin(m[1], 3)}» за ${m[2]} жемч.?`, `Acheter l’apparence ${skin(m[1], 4)} pour ${m[2]} perles ?`, `Design ${skin(m[1], 5)} für ${m[2]} Perlen kaufen?`])],
+    [/^(.+) 스킨을 적용했습니다\.$/, (m, i) => L(i, [`${skin(m[1], 0)} skin applied.`, `${skin(m[1], 1)}スキンを適用しました。`, `已应用${skin(m[1], 2)}皮肤。`, `Облик «${skin(m[1], 3)}» применён.`, `Apparence ${skin(m[1], 4)} appliquée.`, `Design ${skin(m[1], 5)} aktiviert.`])],
+    [/^사활 (\d+) \/ (\d+)$/, (m, i) => L(i, [`Puzzle ${m[1]} / ${m[2]}`, `詰碁 ${m[1]} / ${m[2]}`, `死活 ${m[1]} / ${m[2]}`, `Задача ${m[1]} / ${m[2]}`, `Problème ${m[1]} / ${m[2]}`, `Aufgabe ${m[1]} / ${m[2]}`])],
+    [/^흑 차례입니다\. 한 수로 백 돌 (\d+)개를 한꺼번에 따내세요\. 위·아래 층도 이웃입니다\.$/, (m, i) => L(i, [`Black to play. Capture ${m[1]} white stones in one move. Layers above and below count as neighbours.`, `黒番です。1手で白石${m[1]}個をまとめて取ってください。上下の層も隣です。`, `黑先。一手提掉 ${m[1]} 颗白子。上下层也是相邻的。`, `Ход чёрных. Возьмите ${m[1]} белых камня одним ходом. Слои выше и ниже — тоже соседи.`, `Aux noirs. Capturez ${m[1]} pierres blanches en un coup. Les couches au-dessus et au-dessous sont voisines.`, `Schwarz am Zug. Schlage ${m[1]} weiße Steine mit einem Zug. Ebenen darüber und darunter sind Nachbarn.`])],
+    [/^흑 돌 (\d+)개 무리가 단수\(활로 1개\)에 몰렸습니다\. 한 수로 활로를 2개 이상으로 늘려 살리세요\.$/, (m, i) => L(i, [`A group of ${m[1]} black stones is in atari (1 liberty). Save it in one move by raising its liberties to 2 or more.`, `黒石${m[1]}個の一団がアタリ（ダメ1つ）です。1手でダメを2つ以上にして助けてください。`, `${m[1]} 颗黑子的棋块被叫吃（只剩1口气）。一手把气增加到2口以上救活它。`, `Группа из ${m[1]} чёрных камней в атари (1 дамэ). Спасите её одним ходом, доведя дыхания до 2 и более.`, `Un groupe de ${m[1]} pierres noires est en atari (1 liberté). Sauvez-le en un coup en portant ses libertés à 2 ou plus.`, `Eine Gruppe aus ${m[1]} schwarzen Steinen steht im Atari (1 Freiheit). Rette sie mit einem Zug auf 2 oder mehr Freiheiten.`])],
+    [/^✅ 정답! 여의주 \+(\d+)$/, (m, i) => L(i, [`✅ Correct! Pearls +${m[1]}`, `✅ 正解！如意珠 +${m[1]}`, `✅ 正确！如意珠 +${m[1]}`, `✅ Верно! Жемчужины +${m[1]}`, `✅ Bravo ! Perles +${m[1]}`, `✅ Richtig! Perlen +${m[1]}`])],
+    [/^한 수로 푸는 입체 문제입니다\. 풀면 여의주 \+(\d+)$/, (m, i) => L(i, [`A one-move 3D puzzle. Solve it for pearls +${m[1]}`, `1手で解く立体問題です。解くと如意珠 +${m[1]}`, `一手解开的立体题，答对得如意珠 +${m[1]}`, `Объёмная задача в один ход. За решение — жемчужины +${m[1]}`, `Un problème 3D en un coup. Résolvez-le : perles +${m[1]}`, `Eine 3D-Aufgabe in einem Zug. Lösen bringt Perlen +${m[1]}`])],
+    [/^🔥 연속 (\d+)일$/, (m, i) => L(i, [`🔥 ${m[1]}-day streak`, `🔥 ${m[1]}日連続`, `🔥 连续 ${m[1]} 天`, `🔥 ${m[1]} дн. подряд`, `🔥 ${m[1]} jours d’affilée`, `🔥 ${m[1]} Tage in Folge`])],
+    [/^(\d+)번 문제 풀기$/, (m, i) => L(i, [`Solve puzzle #${m[1]}`, `${m[1]}番の問題を解く`, `做第 ${m[1]} 题`, `Решить №${m[1]}`, `Résoudre le n° ${m[1]}`, `Aufgabe Nr. ${m[1]} lösen`])],
+    [/^(\d+)초 안에 상대가 없으면 AI 연습 상대와 시작합니다$/, (m, i) => L(i, [`If no one joins within ${m[1]} s, you’ll play an AI practice opponent`, `${m[1]}秒以内に相手がいなければAI練習相手と始めます`, `${m[1]} 秒内没有对手将与 AI 练习对手开始`, `Если за ${m[1]} с соперника нет — начнём с тренировочным ИИ`, `Sans adversaire d’ici ${m[1]} s, vous jouerez contre une IA d’entraînement`, `Kommt in ${m[1]} s niemand, spielst du gegen eine Übungs-KI`])]
+  ];
+  void SK;
+  window.HanokI18n.add(T, P);
+})();
 </script>
 <script>
 /* PWA: 웹(https)에서 열면 서비스 워커 등록 → 설치·오프라인 실행. 앱(Capacitor·Electron)·파일로 열 때는 등록하지 않음 */
